@@ -5,7 +5,10 @@ pre-commit:
       run: |
         git diff --cached --name-only | while read f; do
           size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
-          [ "$size" -gt $((500 * 1024)) ] && echo "ERROR: $f >500KB — add to .gitignore" && exit 1
+          if [ "$size" -gt $((500 * 1024)) ]; then
+            echo "ERROR: $f >500KB — add to .gitignore"
+            exit 1
+          fi
         done
 
     - name: block-credentials
