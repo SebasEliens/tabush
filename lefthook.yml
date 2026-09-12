@@ -1,0 +1,19 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: block-large-files
+      run: |
+        git diff --cached --name-only | while read f; do
+          size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
+          [ "$size" -gt $((500 * 1024)) ] && echo "ERROR: $f >500KB — add to .gitignore" && exit 1
+        done
+
+    - name: block-credentials
+      run: |
+        git diff --cached --name-only | grep -qE '\.env$|credentials\.json|service_account' && \
+          echo "ERROR: possible credentials staged" && exit 1 || true
+
+    - name: strip-notebook-outputs
+      glob: "*.ipynb"
+      run: uvx nbstripout {staged_files}
+      stage_fixed: true

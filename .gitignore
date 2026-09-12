@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Data / large files (use DVC or external storage)
+*.tif
+*.tiff
+*.geotiff
+*.nc
+*.h5
+*.pt
+*.pth
+data/
+
+# Credentials
+.env
+credentials.json
+service_account*.json
+*_secret*.json
+
+# Notebooks (outputs stripped by lefthook; raw data cached locally)
+.ipynb_checkpoints/
+
+# Build / misc
+dist/
+.DS_Store
