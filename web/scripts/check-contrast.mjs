@@ -30,6 +30,9 @@ const pairs = [
   ["color-danger", "color-surface", 3], ["color-warning", "color-surface", 3], ["color-success", "color-surface", 3],
   ["color-focus", "color-surface", 3], ["color-highlight", "color-surface-inverse", 3],
   ["color-border-strong", "color-surface", 1.5],
+  // Top bar gradient: inverse text must hold on every stop (the cyan glow is translucent over cyan-700)
+  ["color-text-inverse", "green-700", 4.5], ["color-text-inverse", "green-600", 4.5], ["color-text-inverse", "teal-700", 4.5], ["color-text-inverse", "cyan-700", 4.5],
+  ["color-text-inverse-muted", "green-700", 4.5], ["color-text-inverse-muted", "green-600", 4.5], ["color-text-inverse-muted", "teal-700", 4.5], ["color-text-inverse-muted", "cyan-700", 4.5],
 ];
 
 let failed = 0;

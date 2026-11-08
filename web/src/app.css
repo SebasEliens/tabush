@@ -11,7 +11,8 @@ main { flex: 1; min-height: 0; overflow: auto; }
 .topbar {
   display: flex; align-items: center; gap: var(--space-6); flex-shrink: 0;
   height: var(--topbar-height); padding: 0 var(--space-5);
-  background: var(--color-surface-inverse); color: var(--color-text-inverse); z-index: var(--z-topbar);
+  background: var(--texture-grain), var(--gradient-brand); color: var(--color-text-inverse); z-index: var(--z-topbar);
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.08);
 }
 .topbar nav { display: flex; gap: var(--space-1); height: 100%; }
 .topbar nav a {
@@ -23,10 +24,10 @@ main { flex: 1; min-height: 0; overflow: auto; }
 .topbar nav a.active { color: var(--color-text-inverse); border-bottom-color: var(--color-highlight); }
 .topbar__spacer { flex: 1; }
 .topbar__tenant { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-inverse-muted); font-size: var(--text-sm); }
-.topbar .ui-select { background-color: var(--green-900); border-color: var(--green-800); color: var(--color-text-inverse);
+.topbar .ui-select { background-color: rgb(7 29 22 / 0.35); border-color: rgb(255 255 255 / 0.18); color: var(--color-text-inverse);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394d8b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
 .topbar .ui-button--ghost { color: var(--color-text-inverse-muted); }
-.topbar .ui-button--ghost:hover { background: var(--green-900); color: var(--color-text-inverse); }
+.topbar .ui-button--ghost:hover { background: rgb(7 29 22 / 0.3); color: var(--color-text-inverse); }
 
 /* Map workspace ------------------------------------------------------------ */
 .workspace { display: grid; grid-template-columns: var(--sidebar-width) 1fr var(--panel-width); height: 100%; }
@@ -126,7 +127,7 @@ main { flex: 1; min-height: 0; overflow: auto; }
 
 /* Report -------------------------------------------------------------------- */
 .report { max-width: 840px; margin: var(--space-8) auto; background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; }
-.report__band { background: var(--color-surface-inverse); color: var(--color-text-inverse); padding: var(--space-6) var(--space-8); display: flex; justify-content: space-between; align-items: center; }
+.report__band { background: var(--texture-grain), var(--gradient-brand); color: var(--color-text-inverse); padding: var(--space-6) var(--space-8); display: flex; justify-content: space-between; align-items: center; }
 .report__body { padding: var(--space-8); display: flex; flex-direction: column; gap: var(--space-6); }
 .report__title { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: var(--weight-bold); }
 @media print {

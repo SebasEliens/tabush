@@ -51,7 +51,7 @@ generous whitespace and bold type. Our own take: a southern-Brazil family
 farm with an araucária pine.
 
 - **Colour.** Deep pasture greens (brand), a bright cyan sky (highlight,
-  info, focus), ink-dark green for the top bar and inverse surfaces, small
+  info, focus), a grainy green-to-cyan brand gradient (`--gradient-brand` + `--texture-grain`) for the top bar and report header, ink-dark green for other inverse surfaces, small
   orange sparks (logo dot, sun, roofs). Status uses red, amber, green and
   cyan tints. Climate risk uses a sequential yellow-to-red ramp, used only
   for data.
