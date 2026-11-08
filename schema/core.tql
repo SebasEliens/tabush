@@ -1,0 +1,83 @@
+# Phase-0 draft, not yet loaded into a running TypeDB instance.
+define
+
+  # --- provenance, carried by every fact (PROV-O style) ---
+  attribute source, value string;
+  attribute snapshot-date, value date;
+  attribute confidence, value double;
+
+  attribute car-code, value string;
+  attribute sigef-code, value string;
+  attribute ibge-code, value string;
+  attribute h3-cell, value string;
+  attribute name, value string;
+  attribute area-ha, value double;
+  attribute overlap-pct, value double;
+  attribute cpf-hash, value string;
+  attribute cnpj, value string;
+  attribute event-date, value date;
+
+  entity rural-property,
+    owns car-code @key, owns area-ha, owns source, owns snapshot-date,
+    plays property-parcel:property,
+    plays ownership:property,
+    plays location:located;
+
+  entity parcel,
+    owns h3-cell @card(0..), owns area-ha, owns source, owns snapshot-date,
+    plays property-parcel:parcel,
+    plays territory-overlap:parcel,
+    plays land-titling:parcel,
+    plays impact:affected;
+
+  entity land-title,
+    owns sigef-code @key, owns source, owns snapshot-date,
+    plays land-titling:title;
+
+  entity territory @abstract,
+    owns name, owns source, owns snapshot-date,
+    plays territory-overlap:territory;
+  entity indigenous-land sub territory;
+  entity quilombola-territory sub territory;
+  entity protected-area sub territory;
+  entity public-forest sub territory;
+  entity settlement sub territory;
+
+  entity municipality,
+    owns ibge-code @key, owns name,
+    plays location:place;
+
+  entity agent @abstract,
+    plays ownership:owner;
+  entity person sub agent, owns cpf-hash @key;
+  entity legal-entity sub agent, owns cnpj @key, owns name;
+
+  entity event @abstract,
+    owns event-date, owns source, owns snapshot-date,
+    plays impact:cause;
+  entity embargo sub event;
+  entity deforestation-event sub event;
+  entity hazard-event sub event;
+
+  # --- relations ---
+  relation property-parcel,
+    relates property, relates parcel;
+
+  relation territory-overlap,
+    relates parcel, relates territory,
+    owns area-ha, owns overlap-pct, owns source, owns snapshot-date, owns confidence;
+
+  relation land-titling,
+    relates parcel, relates title,
+    owns confidence, owns source, owns snapshot-date;
+
+  relation ownership,
+    relates owner, relates property,
+    owns confidence, owns source, owns snapshot-date;
+
+  relation location,
+    relates located, relates place;
+
+  relation impact,
+    relates cause, relates affected,
+    owns area-ha, owns source, owns snapshot-date, owns confidence;
