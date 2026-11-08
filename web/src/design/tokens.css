@@ -1,0 +1,184 @@
+/*
+ * Tabush design tokens. The single source of truth for colour, type,
+ * spacing, shape, elevation and motion. Components use the SEMANTIC tokens
+ * (--color-*, --space-*, ...), never the primitive palette directly.
+ * Contrast pairs are checked by `npm run check:contrast`.
+ */
+
+:root {
+  /* ---------- Primitive palette ----------
+   * Inspired by flat, grainy landscape illustration: deep pasture greens,
+   * a bright cyan sky, an ink-dark tree, and small orange sparks.
+   */
+  --green-50: #e8f6ef;
+  --green-100: #c9ecdb;
+  --green-200: #94d8b8;
+  --green-300: #57c08f;
+  --green-400: #22a36c;
+  --green-500: #0f8a57;
+  --green-600: #0b6f47;
+  --green-700: #0a5a3b;
+  --green-800: #0b4430;
+  --green-900: #0b2f22;
+  --green-950: #071d16;
+
+  --cyan-50: #e6fafe;
+  --cyan-100: #c2f2fc;
+  --cyan-200: #8ce6f8;
+  --cyan-300: #4fd8f3;
+  --cyan-400: #22c9ec;
+  --cyan-500: #0eaed3;
+  --cyan-600: #0a8aab;
+  --cyan-700: #0a6e89;
+  --cyan-800: #0b566b;
+
+  --orange-50: #fff1e8;
+  --orange-200: #fcc6a2;
+  --orange-400: #f7843f;
+  --orange-500: #f26b2c;
+  --orange-700: #b4461a;
+
+  --indigo-400: #5b5fc7; /* barns, silos and other built structures in illustration */
+  --indigo-600: #3d3f99;
+
+  /* Cool, slightly green-tinted neutrals */
+  --neutral-0: #ffffff;
+  --neutral-25: #fafcfb;
+  --neutral-50: #f3f6f4;
+  --neutral-100: #e8eeeb;
+  --neutral-200: #d8e1dd;
+  --neutral-300: #bccac4;
+  --neutral-400: #90a099;
+  --neutral-500: #63736c;
+  --neutral-600: #4b5953;
+  --neutral-700: #35413c;
+  --neutral-800: #212a26;
+  --neutral-900: #111916;
+
+  /* Status hues */
+  --red-50: #fdeeec;   --red-200: #f5c0b8;   --red-600: #c2361f;   --red-800: #8f2414;
+  --amber-50: #fdf4dc; --amber-200: #f0d394; --amber-500: #b07800; --amber-800: #6c4800;
+  --purple-50: #f2edf9; --purple-400: #7c5cc4; --purple-700: #563c93; /* territories */
+
+  /* ---------- Semantic colour ---------- */
+  --color-bg: var(--neutral-50);
+  --color-surface: var(--neutral-0);
+  --color-surface-sunken: var(--neutral-100);
+  --color-surface-hover: var(--neutral-50);
+  --color-surface-inverse: var(--green-950);
+  --color-border: var(--neutral-200);
+  --color-border-strong: var(--neutral-300);
+
+  --color-text: var(--neutral-900);
+  --color-text-secondary: var(--neutral-600);
+  --color-text-muted: var(--neutral-500);
+  --color-text-on-accent: var(--neutral-0);
+  --color-text-inverse: var(--neutral-0);
+  --color-text-inverse-muted: var(--green-200);
+
+  --color-accent: var(--green-600);
+  --color-accent-hover: var(--green-700);
+  --color-accent-subtle: var(--green-50);
+  --color-accent-text: var(--green-700);
+  --color-highlight: var(--cyan-400);     /* selection, active indicators on dark */
+  --color-spark: var(--orange-500);       /* tiny brand accents only, never status */
+  --color-focus: var(--cyan-600);
+
+  --color-danger-bg: var(--red-50);
+  --color-danger-border: var(--red-200);
+  --color-danger-text: var(--red-800);
+  --color-danger: var(--red-600);
+
+  --color-warning-bg: var(--amber-50);
+  --color-warning-border: var(--amber-200);
+  --color-warning-text: var(--amber-800);
+  --color-warning: var(--amber-500);
+
+  --color-success-bg: var(--green-50);
+  --color-success-border: var(--green-200);
+  --color-success-text: var(--green-700);
+  --color-success: var(--green-500);
+
+  --color-info-bg: var(--cyan-50);
+  --color-info-border: var(--cyan-200);
+  --color-info-text: var(--cyan-800);
+  --color-info: var(--cyan-600);
+
+  --color-territory: var(--purple-400);
+  --color-territory-bg: var(--purple-50);
+
+  /* Sequential climate-risk ramp, low → high (data viz only) */
+  --risk-1: #fdf0c7;
+  --risk-2: #f9c97c;
+  --risk-3: #f28f45;
+  --risk-4: #d9532c;
+  --risk-5: #a12a17;
+
+  /* ---------- Typography ---------- */
+  --font-sans: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Display face: bold, rounded geometric sans for brand, page and panel titles */
+  --font-display: "Outfit Variable", Outfit, "Avenir Next", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;    /* 12 · captions, metadata */
+  --text-sm: 0.8125rem;  /* 13 · secondary text, table cells */
+  --text-md: 0.875rem;   /* 14 · body (base) */
+  --text-lg: 1rem;       /* 16 · emphasised body, panel titles */
+  --text-xl: 1.25rem;    /* 20 · section titles */
+  --text-2xl: 1.5rem;    /* 24 · page titles */
+  --text-3xl: 1.875rem;  /* 30 · key figures */
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---------- Spacing (4px grid) ---------- */
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4 */
+  --space-2: 0.5rem;  /* 8 */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem;    /* 16 */
+  --space-5: 1.25rem; /* 20 */
+  --space-6: 1.5rem;  /* 24 */
+  --space-8: 2rem;    /* 32 */
+  --space-10: 2.5rem; /* 40 */
+  --space-12: 3rem;   /* 48 */
+
+  /* ---------- Shape & elevation ---------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  --shadow-sm: 0 1px 2px rgb(7 29 22 / 0.06);
+  --shadow-md: 0 2px 8px rgb(7 29 22 / 0.08), 0 1px 2px rgb(7 29 22 / 0.06);
+  --shadow-lg: 0 12px 32px rgb(7 29 22 / 0.12), 0 2px 6px rgb(7 29 22 / 0.06);
+  --ring-focus: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus);
+
+  /* ---------- Motion ---------- */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---------- Layout ---------- */
+  --topbar-height: 56px;
+  --sidebar-width: 320px;
+  --panel-width: 400px;
+  --content-max: 1200px;
+  --z-map-controls: 10;
+  --z-topbar: 20;
+  --z-overlay: 30;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

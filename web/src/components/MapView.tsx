@@ -6,7 +6,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { config } from "../config";
 import type { RuralProperty, Territory } from "../api/types";
-import { worstSeverity } from "../format";
+import { statusText, worstSeverity } from "../format";
+import { highlight, ink, riskRamp, statusColor, territoryColor } from "../design/tokens";
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -24,7 +25,7 @@ const osmStyle: StyleSpecification = {
       attribution: "© OpenStreetMap contributors",
     },
   },
-  layers: [{ id: "osm", type: "raster", source: "osm", paint: { "raster-saturation": -0.6, "raster-opacity": 0.85 } }],
+  layers: [{ id: "osm", type: "raster", source: "osm", paint: { "raster-saturation": -0.75, "raster-opacity": 0.8, "raster-contrast": -0.1 } }],
 };
 
 interface Props {
@@ -40,7 +41,7 @@ function toFC(properties: RuralProperty[]): GeoJSON.FeatureCollection {
     type: "FeatureCollection",
     features: properties.map((p) => ({
       type: "Feature",
-      id: p.carCode,
+
       geometry: p.geometry,
       properties: { carCode: p.carCode, name: p.name, risk: p.risk.overall, status: worstSeverity(p) },
     })),
@@ -49,10 +50,10 @@ function toFC(properties: RuralProperty[]): GeoJSON.FeatureCollection {
 
 const riskColor: maplibregl.ExpressionSpecification = [
   "interpolate", ["linear"], ["get", "risk"],
-  0.1, "#fde9b8", 0.35, "#f6a15a", 0.6, "#d9472b", 0.85, "#7f1d1d",
+  0.1, riskRamp[0], 0.3, riskRamp[1], 0.45, riskRamp[2], 0.6, riskRamp[3], 0.8, riskRamp[4],
 ];
 const complianceColor: maplibregl.ExpressionSpecification = [
-  "match", ["get", "status"], "block", "#c62828", "warn", "#e6a100", "#2e7d5b",
+  "match", ["get", "status"], "block", statusColor.block, "warn", statusColor.warn, statusColor.ok,
 ];
 
 export function MapView({ properties, territories, selected, colorBy, onSelect }: Props) {
@@ -66,24 +67,42 @@ export function MapView({ properties, territories, selected, colorBy, onSelect }
       container: ref.current!,
       style: config.mapStyleUrl || osmStyle,
       center: [-52.675, -31.395],
+      attributionControl: { compact: true },
       zoom: 12,
     });
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     map.addControl(new maplibregl.ScaleControl(), "bottom-left");
     map.on("load", () => {
       map.addSource("territories", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-      map.addSource("parcels", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-      map.addLayer({ id: "territories-fill", type: "fill", source: "territories", paint: { "fill-color": "#6a4c93", "fill-opacity": 0.12 } });
-      map.addLayer({ id: "territories-line", type: "line", source: "territories", paint: { "line-color": "#6a4c93", "line-width": 2, "line-dasharray": [3, 2] } });
-      map.addLayer({ id: "parcels-fill", type: "fill", source: "parcels", paint: { "fill-color": riskColor, "fill-opacity": 0.65 } });
+      map.addSource("parcels", { type: "geojson", data: { type: "FeatureCollection", features: [] }, promoteId: "carCode" });
+      map.addLayer({ id: "territories-fill", type: "fill", source: "territories", paint: { "fill-color": territoryColor, "fill-opacity": 0.14 } });
+      map.addLayer({ id: "territories-line", type: "line", source: "territories", paint: { "line-color": territoryColor, "line-width": 2, "line-dasharray": [3, 2] } });
+      map.addLayer({ id: "parcels-fill", type: "fill", source: "parcels", paint: { "fill-color": riskColor, "fill-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 0.9, 0.72] } });
       map.addLayer({ id: "parcels-line", type: "line", source: "parcels", paint: { "line-color": "#ffffff", "line-width": 1 } });
-      map.addLayer({ id: "parcels-selected", type: "line", source: "parcels", filter: ["==", ["get", "carCode"], ""], paint: { "line-color": "#111827", "line-width": 3 } });
+      map.addLayer({ id: "parcels-selected", type: "line", source: "parcels", filter: ["==", ["get", "carCode"], ""], paint: { "line-color": ink, "line-width": 4 } });
+      map.addLayer({ id: "parcels-selected-inner", type: "line", source: "parcels", filter: ["==", ["get", "carCode"], ""], paint: { "line-color": highlight, "line-width": 2 } });
       map.on("click", "parcels-fill", (e) => {
         const car = e.features?.[0]?.properties?.carCode;
         if (car) onSelectRef.current(car);
       });
-      map.on("mouseenter", "parcels-fill", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "parcels-fill", () => (map.getCanvas().style.cursor = ""));
+      const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 8 });
+      let hovered: string | number | undefined;
+      map.on("mousemove", "parcels-fill", (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        map.getCanvas().style.cursor = "pointer";
+        if (hovered !== undefined) map.setFeatureState({ source: "parcels", id: hovered }, { hover: false });
+        hovered = f.id;
+        if (hovered !== undefined) map.setFeatureState({ source: "parcels", id: hovered }, { hover: true });
+        const { name, risk, status } = f.properties as { name: string; risk: number; status: keyof typeof statusText };
+        popup.setLngLat(e.lngLat).setHTML(`<strong>${name}</strong><br/><span style="color:var(--color-text-secondary)">${statusText[status]} · risk ${Number(risk).toFixed(2)}</span>`).addTo(map);
+      });
+      map.on("mouseleave", "parcels-fill", () => {
+        map.getCanvas().style.cursor = "";
+        if (hovered !== undefined) map.setFeatureState({ source: "parcels", id: hovered }, { hover: false });
+        hovered = undefined;
+        popup.remove();
+      });
       mapRef.current = map;
     });
     return () => {
@@ -106,6 +125,7 @@ export function MapView({ properties, territories, selected, colorBy, onSelect }
 
   useWhenReady(mapRef, (map) => {
     map.setFilter("parcels-selected", ["==", ["get", "carCode"], selected ?? ""]);
+    map.setFilter("parcels-selected-inner", ["==", ["get", "carCode"], selected ?? ""]);
     const p = properties.find((x) => x.carCode === selected);
     if (p) {
       const ring = p.geometry.coordinates[0];

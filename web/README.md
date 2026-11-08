@@ -30,4 +30,17 @@ cd web && npm install && npm run dev
 - **Multi-tenancy.** The institution switcher shows that each tenant only
   sees its own properties, loans and alerts.
 
-Stack: React 19, TypeScript, Vite, MapLibre GL, React Router.
+## Design system
+
+Tokens live in `src/design/`, components in `src/ui/`, and the live gallery
+is at `/design`. Principles and rules are in
+[docs/design-system.md](../docs/design-system.md), and feedback is logged in
+[docs/design-feedback.md](../docs/design-feedback.md). Agents follow
+`.claude/skills/design-system/SKILL.md`.
+
+```sh
+npm run check:contrast   # WCAG AA check of semantic colour pairs
+```
+
+Stack: React 19, TypeScript, Vite, MapLibre GL, React Router, lucide icons,
+Inter + Outfit (self-hosted).

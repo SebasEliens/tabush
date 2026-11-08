@@ -1,90 +1,140 @@
-import { Link } from "react-router-dom";
-import type { RuralProperty } from "../api/types";
-import { brl, flagLabel, pct, severityText, worstSeverity } from "../format";
-
-export function ScoreBar({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="scorebar">
-      <span className="scorebar-label">{label}</span>
-      <span className="scorebar-track">
-        <span className="scorebar-fill" style={{ width: pct(value), background: value > 0.6 ? "#d9472b" : value > 0.35 ? "#f6a15a" : "#e9c46a" }} />
-      </span>
-      <span className="scorebar-value">{value.toFixed(2)}</span>
-    </div>
-  );
-}
+import { useState } from "react";
+import { Check, Copy, FileText, MousePointerClick, Search, SlidersHorizontal } from "lucide-react";
+import type { PortfolioSummary, RuralProperty } from "../api/types";
+import { brl, flagLabel, statusText, statusTone, verdict, worstSeverity } from "../format";
+import { Button, ButtonLink, Callout, Disclosure, Eyebrow, Kbd, Meter, StatusBadge } from "../ui";
+import { Landscape } from "../ui/Landscape";
 
 export function PropertyPanel({ p, onClose }: { p: RuralProperty; onClose: () => void }) {
   const status = worstSeverity(p);
+  const v = verdict[status === "info" ? "ok" : status];
+  const findings = p.flags.filter((f) => f.severity !== "info");
+  const exposure = p.loans.reduce((a, l) => a + l.amountBrl, 0);
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard?.writeText(p.carCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
-    <aside className="panel">
-      <header className="panel-head">
+    <aside className="panel" aria-label={`Property ${p.name}`}>
+      <div className="panel__body">
+        {/* 1. Who and what: identity first */}
         <div>
-          <h2>{p.name}</h2>
-          <div className="muted mono">{p.carCode}</div>
+          <div className="row-between">
+            <Eyebrow>Rural property · {p.municipality}</Eyebrow>
+            <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
+          </div>
+          <h2 className="panel__title">{p.name}</h2>
+          <div className="panel__car">
+            <span className="mono text-sm">{p.carCode}</span>
+            <Button variant="ghost" size="sm" iconOnly icon={copied ? Check : Copy} onClick={copy} aria-label="Copy CAR code" title="Copy CAR code" />
+          </div>
         </div>
-        <button className="icon-btn" onClick={onClose} aria-label="Close">×</button>
-      </header>
 
-      <div className={`status-banner status-${status}`}>
-        <strong>{severityText[status]}</strong>
-        <span>{p.flags.filter((f) => f.severity !== "info").length} compliance flag(s)</span>
-      </div>
+        {/* 2. The decision, in plain language */}
+        <Callout tone={statusTone[status]} title={v.title}>
+          {findings.length > 0 ? (
+            <ul className="reasons">
+              {findings.map((f, i) => <li key={i}>{f.detail}</li>)}
+            </ul>
+          ) : v.body}
+        </Callout>
 
-      <dl className="facts">
-        <dt>Municipality</dt><dd>{p.municipality} ({p.ibgeCode})</dd>
-        <dt>Area</dt><dd>{p.areaHa} ha</dd>
-        <dt>Main crop</dt><dd>{p.mainCrop}</dd>
-        <dt>CAR status</dt><dd className={`car-${p.carStatus}`}>{p.carStatus}</dd>
-        <dt>Holder</dt><dd className="mono">{p.holderHash}</dd>
-      </dl>
-
-      <section>
-        <h3>Compliance check</h3>
-        {p.flags.length === 0 && <p className="muted">No overlaps, embargoes or deforestation found.</p>}
-        <ul className="flags">
-          {p.flags.map((f, i) => (
-            <li key={i} className={`flag flag-${f.severity}`}>
-              <div className="flag-title">{flagLabel[f.type]}</div>
-              <div>{f.detail}</div>
-              <div className="muted small">Source: {f.source} · snapshot {f.snapshotDate}</div>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h3>Climate risk</h3>
-        <ScoreBar label="Drought" value={p.risk.drought} />
-        <ScoreBar label="Flood" value={p.risk.flood} />
-        <ScoreBar label="Heat" value={p.risk.heat} />
-        <ScoreBar label="Overall" value={p.risk.overall} />
-        <p className="muted small">
-          Expected yield loss {p.risk.expectedYieldLossPct}% · ZARC class {p.risk.zarcClass} · model v0.1 (mock)
-        </p>
-      </section>
-
-      <section>
-        <h3>Loans</h3>
-        <table className="mini">
-          <tbody>
-            {p.loans.map((l) => (
-              <tr key={l.id}><td className="mono">{l.id}</td><td>{l.product}</td><td className="num">{brl(l.amountBrl)}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-
-      {p.practices.length > 0 && (
-        <section>
-          <h3>Adaptation practices</h3>
-          <p>{p.practices.join(", ")} <span className="muted small">(awaiting imagery verification)</span></p>
+        {/* 3. Climate risk, with words as well as numbers */}
+        <section className="stack-3" aria-labelledby="risk-h">
+          <div className="row-between">
+            <h3 id="risk-h">Climate risk</h3>
+            <span className="text-sm text-secondary">Expected yield loss {p.risk.expectedYieldLossPct}%</span>
+          </div>
+          <Meter label="Drought" value={p.risk.drought} />
+          <Meter label="Flood" value={p.risk.flood} />
+          <Meter label="Heat" value={p.risk.heat} />
+          <Meter label="Overall" value={p.risk.overall} />
         </section>
-      )}
 
-      <Link className="btn primary" to={`/report/${encodeURIComponent(p.carCode)}`} target="_blank">
-        Open compliance report
-      </Link>
+        <div className="panel__actions">
+          <ButtonLink variant="primary" icon={FileText} to={`/report/${encodeURIComponent(p.carCode)}`} target="_blank">
+            Compliance report
+          </ButtonLink>
+        </div>
+
+        {/* 4. Details on demand */}
+        <div>
+          <Disclosure title="All checks and sources" meta={`${p.flags.length} finding${p.flags.length === 1 ? "" : "s"}`}>
+            {p.flags.length === 0 ? (
+              <p className="text-secondary">No findings in any source.</p>
+            ) : (
+              <ul className="flag-list">
+                {p.flags.map((f, i) => (
+                  <li key={i}>
+                    <div className="row-between">
+                      <strong>{flagLabel[f.type]}</strong>
+                      <StatusBadge tone={statusTone[f.severity]}>{statusText[f.severity]}</StatusBadge>
+                    </div>
+                    <span>{f.detail}</span>
+                    <span className="text-xs text-muted">{f.source} · snapshot {f.snapshotDate}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Disclosure>
+          <Disclosure title="Loans" meta={brl(exposure)}>
+            <ul className="flag-list">
+              {p.loans.map((l) => (
+                <li key={l.id}>
+                  <div className="row-between"><strong>{l.product}</strong><span className="num">{brl(l.amountBrl)}</span></div>
+                  <span className="text-xs text-muted"><span className="mono">{l.id}</span> · matures {l.maturity}</span>
+                </li>
+              ))}
+            </ul>
+          </Disclosure>
+          <Disclosure title="Property facts">
+            <dl className="facts">
+              <dt>Area</dt><dd>{p.areaHa} ha</dd>
+              <dt>Main crop</dt><dd>{p.mainCrop}</dd>
+              <dt>CAR status</dt><dd>{p.carStatus}</dd>
+              <dt>ZARC class</dt><dd>{p.risk.zarcClass}</dd>
+              <dt>Municipality</dt><dd>{p.municipality} ({p.ibgeCode})</dd>
+              <dt>Holder</dt><dd className="mono text-sm">{p.holderHash}</dd>
+            </dl>
+          </Disclosure>
+          <Disclosure title="Adaptation practices" meta={p.practices.length ? p.practices.length : "None"}>
+            {p.practices.length ? (
+              <p>{p.practices.join(", ")} <span className="text-sm text-muted">· awaiting imagery verification</span></p>
+            ) : (
+              <p className="text-secondary">No practices declared. Practices like cover crops or cisterns can lower the drought score.</p>
+            )}
+          </Disclosure>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// Shown before anything is selected: orient the user and say what to do next.
+export function PanelWelcome({ summary, tenantName }: { summary?: PortfolioSummary; tenantName?: string }) {
+  return (
+    <aside className="panel panel__welcome" aria-label="Getting started">
+      <Landscape height={170} />
+      <div className="panel__welcome-text stack-4">
+        <div className="stack-1">
+          <Eyebrow>{tenantName}</Eyebrow>
+          <h2>Check a property before you lend</h2>
+        </div>
+        {summary && (
+          <p className="text-secondary">
+            {summary.properties} properties in Canguçu. <strong>{summary.blockedCount} blocked</strong> and{" "}
+            {Math.round(summary.flaggedPct * summary.properties) - summary.blockedCount} need a closer look.
+          </p>
+        )}
+        <ul className="tips">
+          <li><MousePointerClick size={16} aria-hidden /><span>Pick a property on the map or in the list to see its compliance verdict and climate risk.</span></li>
+          <li><Search size={16} aria-hidden /><span>Press <Kbd>/</Kbd> to search by name or CAR code.</span></li>
+          <li><SlidersHorizontal size={16} aria-hidden /><span>Switch the map between climate risk and compliance.</span></li>
+        </ul>
+      </div>
     </aside>
   );
 }
