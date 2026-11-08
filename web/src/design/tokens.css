@@ -78,18 +78,26 @@
   --color-text-inverse: var(--neutral-0);
   --color-text-inverse-muted: #e3f5ec;
 
-  /* Brand gradient: pasture into sky. Used for the top bar and report band. */
-  --gradient-brand: radial-gradient(120% 220% at 100% 0%, rgb(34 201 236 / 0.2), transparent 55%), linear-gradient(100deg, var(--green-700) 0%, var(--green-600) 40%, var(--teal-700) 72%, var(--cyan-700) 100%);
-  /* Fine film grain, layered over brand surfaces to echo the illustration */
-  --texture-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 
   --color-accent: var(--green-600);
   --color-accent-hover: var(--green-700);
   --color-accent-subtle: var(--green-50);
   --color-accent-text: var(--green-700);
-  --color-highlight: var(--cyan-400);     /* selection, active indicators on dark */
+  --color-highlight: var(--cyan-400);
+
+  /* Brand bar: solid sky cyan with ink text (top bar, report header) */
+  --color-brand-bar: var(--cyan-400);
+  --color-text-on-brand: var(--green-950);
+  --color-text-on-brand-muted: var(--green-800);
+  --color-brand-bar-control: rgb(255 255 255 / 0.6);
+
+  /* Primary action: the same sky cyan, ink text, crisp darker edge */
+  --color-action: var(--cyan-400);
+  --color-action-hover: var(--cyan-300);
+  --color-action-border: var(--cyan-700);
+  --color-text-on-action: var(--green-950);     /* selection, active indicators on dark */
   --color-spark: var(--orange-500);       /* tiny brand accents only, never status */
-  --color-focus: var(--cyan-600);
+  --color-focus: var(--green-950); /* ink ring reads on white and on cyan */
 
   --color-danger-bg: var(--red-50);
   --color-danger-border: var(--red-200);

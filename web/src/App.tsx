@@ -17,7 +17,7 @@ export function App() {
       <a className="skip-link" href="#main">Skip to content</a>
       {!isReport && (
         <header className="topbar">
-          <Logo inverse />
+          <Logo tone="on-brand" />
           <nav aria-label="Main">
             <NavLink to="/" end><MapIcon size={16} aria-hidden />Map</NavLink>
             <NavLink to="/portfolio"><PieChart size={16} aria-hidden />Portfolio</NavLink>

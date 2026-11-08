@@ -51,7 +51,7 @@ generous whitespace and bold type. Our own take: a southern-Brazil family
 farm with an araucária pine.
 
 - **Colour.** Deep pasture greens (brand), a bright cyan sky (highlight,
-  info, focus), a grainy green-to-cyan brand gradient (`--gradient-brand` + `--texture-grain`) for the top bar and report header, ink-dark green for other inverse surfaces, small
+  info, focus), a solid sky-cyan brand bar with ink text (`--color-brand-bar`) for the top bar and report header, the same cyan for primary actions (`--color-action`), ink-dark green for other inverse surfaces, small
   orange sparks (logo dot, sun, roofs). Status uses red, amber, green and
   cyan tints. Climate risk uses a sequential yellow-to-red ramp, used only
   for data.
@@ -87,7 +87,7 @@ paint) are mirrored in `tokens.ts`; keep both in sync.
 
 | Component | Use for |
 |---|---|
-| `Button`, `ButtonLink` | Actions. One `primary` per view; `secondary` for others; `ghost` for low-emphasis/toolbar; `danger` for destructive. |
+| `Button`, `ButtonLink` | Actions. One `primary` per view (sky cyan, ink text); `secondary` for others; `ghost` for low-emphasis/toolbar; `danger` for destructive. |
 | `StatusBadge`, `Badge` | Compact status with icon + word; neutral/accent/mock labels. |
 | `Callout` | A verdict or explanation that needs attention, in plain language. |
 | `Card`, `Stat` | Grouped content; key figures with a label and a hint. |

@@ -26,7 +26,7 @@ export function ReportPage() {
   return (
     <article className="report">
       <header className="report__band">
-        <Logo inverse />
+        <Logo tone="on-brand" />
         <Button className="no-print" variant="secondary" size="sm" icon={Printer} onClick={() => window.print()}>Print or save as PDF</Button>
       </header>
       <div className="report__body">
