@@ -1,0 +1,29 @@
+# Local stack. Every service is a plain OCI container configured by env vars,
+# so the same images run on any cloud (ECS, Cloud Run, Azure Container Apps,
+# Kubernetes, a VM). Backing services (Postgres/PostGIS, TypeDB, object
+# storage, API) get added here as they are built.
+#
+#   docker compose up --build            # production-like build on :8080
+#   docker compose --profile dev up      # Vite hot reload on :5173
+
+services:
+  web:
+    build:
+      context: ./web
+      target: runtime
+    ports:
+      - "8080:8080"
+    environment:
+      TABUSH_API_URL: ""          # empty = in-browser mock API
+      TABUSH_MAP_STYLE_URL: ""    # empty = OSM raster tiles
+
+  web-dev:
+    profiles: ["dev"]
+    build:
+      context: ./web
+      target: dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
