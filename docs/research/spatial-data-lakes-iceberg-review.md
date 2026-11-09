@@ -38,7 +38,14 @@ It's a short opinion piece, not a technical guide. It names no versions, says no
 
 **5. Opening the catalog to partners and agents.** A STAC catalog that points to Iceberg tables (via the extension) is a cheap way to give insurers, auditors and our own LLM Q&A agent (C6) a discoverable, read-only view of the *public* layers. **Partner data (loan books, claims, hashed CPF) must never go into an open catalog**, so the catalog needs a public tier and a private, tenant-scoped tier.
 
-**6. Portolan: watch, don't adopt.** It's young, with no stated maturity, and its focus (publishing public SDI data) isn't our core need. It could matter later if we publish derived open layers (e.g. a municipal climate-risk layer) as a public good, which also supports the climate-justice side.
+**6. Portolan: watch, don't adopt.** It's young, it doesn't handle mixed open/private data well yet (see the maintainer comment below), and its focus (publishing public SDI data) isn't our core need. It could matter later if we publish derived open layers (e.g. a municipal climate-risk layer) as a public good, which also supports the climate-justice side.
+
+## Reader comment from a Portolan maintainer
+
+A comment on the article (shared by Sebas 9 Nov; the author writes as one of Portolan's founders) adds two points the article leaves out:
+
+- **Iceberg geo support isn't mature yet.** "If Iceberg was more mature (in general, and more specifically the geo support) when we started Portolan then I'm sure it would have been in the core." Portolan is built on GeoParquet for that reason, and the founders see Iceberg as a future upgrade, with Parquet kept as an option. This supports our plan to **stay on dated GeoParquet in phase 0** and treat Iceberg as a phase-1 upgrade once geo support in the engines is solid.
+- **Mixed open/private access is a known gap.** "Portolan today is good for fully open data, or data fully behind a firewall, but less so for 'both'." That is exactly our case: public layers (CAR, embargoes, territories) next to tenant-private partner data. So Portolan can't be the catalog layer for our public/private split today. We need our own access control (e.g. tenant-scoped STAC in pgstac plus Iceberg catalog permissions). They hope Iceberg will help here, which is worth tracking.
 
 ## Suggested changes
 
