@@ -15,17 +15,23 @@ __pycache__/
 *.h5
 *.pt
 *.pth
+*.gpkg
+*.shp
+*.parquet
+*.zarr/
 data/
 
 # Credentials
 .env
+!.env.example
 credentials.json
 service_account*.json
 *_secret*.json
 
-# Notebooks (outputs stripped by lefthook; raw data cached locally)
+# Notebooks (outputs stripped by pre-commit)
 .ipynb_checkpoints/
 
 # Build / misc
 dist/
-.DS_Store
+.ruff_cache/
+.pytest_cache/

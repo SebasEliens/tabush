@@ -1,38 +1,42 @@
 # TODO
 
-Tracks planned work in pipeline order. Each item maps to one atomic commit.  
-Move items to `CHANGELOG.md` when done.
+Phase 0 (months 0–3): one pilot municipality, compliance report (C1), first ontology.
+Each item maps to one atomic commit. Move items to `CHANGELOG.md` when done.
 
 ---
 
-## Milestone 1 — Corridor geometry
+## Milestone 0 — Decisions and environment
 
-- [ ] `notebooks/01_corridor.ipynb` — fetch Extremoz substation + Rio do Fogo line from ANEEL SIGEL; OSM fallback if endpoint fails
-- [ ] Buffer corridor 30 m either side (check ANEEL/ONS regulatory clearance distance and cite if different)
-- [ ] Plot buffered corridor on basemap; confirm geometry covers the right AOI visually
-- [ ] Export corridor GeoPackage to `data/corridor.gpkg` (gitignored)
+- [ ] Pick the pilot municipality (family-farm heavy, co-op partner likely, good CAR coverage)
+- [ ] `docker-compose.yml` with PostGIS and TypeDB 3.x Community Edition
+- [ ] TypeDB spike: load `schema/core.tql`, insert sample data, test multi-hop queries and LLM text-to-TypeQL; decide TypeDB vs Neo4j
 
-## Milestone 2 — Imagery
+## Milestone 1 — Ingest (one module per source in `src/tabush/ingest/`)
 
-- [ ] `notebooks/02_imagery.ipynb` — authenticate GEE, pull Sentinel-2 L2A for two epochs: 2022-Q1 and 2025-Q1
-- [ ] Clip to buffered corridor AOI
-- [ ] Show true-color composite + NDVI for both epochs side by side
+- [ ] SICAR/CAR property boundaries and status for the pilot municipality
+- [ ] INCRA SIGEF land titles
+- [ ] Territories: FUNAI indigenous lands, INCRA quilombolas and settlements, CNUC protected areas, SFB CNFP public forests
+- [ ] IBAMA embargoes (+ state list if available) and MTE *lista suja*
+- [ ] MapBiomas land use and Alerta; INPE PRODES/DETER
+- [ ] Each source: provenance columns, CRS guard, validity check, dated GeoParquet snapshot, load to PostGIS
 
-## Milestone 3 — Risk scoring
+## Milestone 2 — Overlaps and graph
 
-- [ ] `notebooks/03_risk.ipynb` — compute NDVI, NDMI, canopy height per corridor segment
-- [ ] Apply WorldCover mask (restinga / bare dune / built-up classification)
-- [ ] Produce rule-based risk score [0–1] per segment
-- [ ] Compute change-detection layer (NDVI delta 2022→2025)
+- [ ] PostGIS overlap queries: property × territory, property × embargo, property × deforestation, CAR × SIGEF (IoU)
+- [ ] H3 indexing of parcels (res 9)
+- [ ] Load entities and overlap relations into the graph with `source`, `snapshot_date`, `confidence`
+- [ ] Flag duplicate/suspicious CAR overlaps
 
-## Milestone 4 — Visualization
+## Milestone 3 — Compliance report (C1)
 
-- [ ] `notebooks/04_map.ipynb` — folium map with risk-colored segments + before/after imagery slider
-- [ ] One-page write-up: problem framing, method, key finding, "what's next" section
-- [ ] Decide: export static folium HTML or wrap in Streamlit app
+- [ ] `POST /checks`-style function: CAR code → pass/flag report with evidence
+- [ ] Report output (HTML/PDF) with map and source citations for each flag
+- [ ] Hand-label a sample to measure property-to-record link precision (target ≥95%)
 
 ## Backlog
 
-- [ ] Check NICFI signup status — upgrade imagery resolution if approved
-- [ ] Source APA Jenipabu official boundary (CNUC/MMA or IDEMA-RN)
-- [ ] DeepForest fine-tune on restinga/dune-scrub samples (stretch goal)
+- [ ] Dagster orchestration once more than two sources are ingested
+- [ ] OWL/SHACL mapping of the TypeDB schema for RDF export (GeoSPARQL, FIBO)
+- [ ] C2 drought risk score: SPI/SPEI from CHIRPS/ERA5, NDVI anomaly
+- [ ] C3 parametric index backtest
+- [ ] Reuse archived Sentinel-2/canopy-height work for land monitoring around properties
