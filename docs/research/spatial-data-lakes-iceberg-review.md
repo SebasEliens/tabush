@@ -47,6 +47,41 @@ A comment on the article (shared by Sebas 9 Nov; the author writes as one of Por
 - **Iceberg geo support isn't mature yet.** "If Iceberg was more mature (in general, and more specifically the geo support) when we started Portolan then I'm sure it would have been in the core." Portolan is built on GeoParquet for that reason, and the founders see Iceberg as a future upgrade, with Parquet kept as an option. This supports our plan to **stay on dated GeoParquet in phase 0** and treat Iceberg as a phase-1 upgrade once geo support in the engines is solid.
 - **Mixed open/private access is a known gap.** "Portolan today is good for fully open data, or data fully behind a firewall, but less so for 'both'." That is exactly our case: public layers (CAR, embargoes, territories) next to tenant-private partner data. So Portolan can't be the catalog layer for our public/private split today. We need our own access control (e.g. tenant-scoped STAC in pgstac plus Iceberg catalog permissions). They hope Iceberg will help here, which is worth tracking.
 
+## Related product: LakehouseBox
+
+*Checked 10 Nov 2026 from [lakehousebox.com](https://lakehousebox.com/) (shared by Sebas). Everything here is the vendor's own claims, and none of it has been tested.*
+
+**What it is:** a managed Apache Iceberg service "for AI agents", run by Lakehousebox S.L. (Madrid). It bundles these parts in one "store" container:
+- an Iceberg REST catalog (their own build)
+- S3-compatible storage
+- scheduled SQL and hosted agents
+- MCP access for agents
+- public catalogs served over a CDN
+- a Postgres endpoint (pg_lake) for BI tools
+
+It can be read and written from DuckDB, Spark, Trino, Polars and PyIceberg.
+
+**Price:** €0.10/GB-month for storage and €0.12/CPU-hour for compute, with no egress fees. Queries run in your own engine aren't billed.
+
+**Self-hosting:** one node on Docker Compose, under a commercial licence. There's no Kubernetes option.
+
+**What lines up with this review:**
+- **Iceberg v3 geometry columns**, GeoParquet import and automatic spatial clustering. This is the "Iceberg for geo" upgrade the Portolan maintainer was waiting for, offered as a product.
+- **Public catalogs next to private ones.** Credentials are scoped to a catalog, last one hour, and come with read/write per person or key. Enterprise adds per-table grants, OIDC and a 400-day audit log. This targets the mixed open/private gap that Portolan has.
+- **Agent access via MCP** fits our analyst Q&A component (C6) and the article's "agents need open catalogs" point.
+
+**Why it doesn't fit as our core platform:**
+- **Data residency.** The managed service runs in Frankfurt and Stockholm. Our rule is to keep data in a Brazil region (LGPD, and what partners expect), so the managed service is out for partner data. Self-hosting in sa-east-1 would solve that.
+- **Self-hosting is too thin for production.** It's a single node, with no high availability and no Kubernetes. That is weaker than our 99.5% API target and than a standard Iceberg catalog setup.
+- **Closed source and very new.** Its GitHub repo holds only an issue tracker: 0 stars, 2 commits, no releases. There's no security certification, and no licence terms are published. Our audit requirements and the risk of lock-in argue against a young closed vendor at the centre of the data layer.
+- **Gaps.** PyIceberg can't write v3 tables yet, which matters because Dagster ingest would use PyIceberg. The site doesn't say how it handles CRS or geography types. Dagster isn't mentioned, and its own scheduler overlaps with ours.
+
+**Verdict: use it as a benchmark, not as our platform.** It's a useful reference for what a geo-aware Iceberg catalog with scoped access looks like. One cheap experiment would be a managed account holding only **public** layers (CAR, IBAMA embargoes, territories) to try Iceberg v3 geometry with DuckDB. For the core platform we stay on open components we can host in Brazil:
+- PyIceberg/DuckDB
+- an open REST catalog (Lakekeeper or Polaris, on Postgres)
+- S3 in sa-east-1
+- pgstac
+
 ## Suggested changes
 
 | Area | Change | When |
