@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Git hooks moved from Lefthook to pre-commit (`.pre-commit-config.yaml`), adding ruff
 
 ### Added
+- First public data slice: `tabush.ingest.indigenous_lands` downloads FUNAI indigenous land limits, writes a dated GeoParquet snapshot and PMTiles; the web map shows them with a layer switch, source and snapshot date
+- `Switch` UI component
 - `uv` project skeleton: `src/tabush/{ingest,geo,graph,risk}`, geo helpers with tests
 - `schema/core.tql`: first-cut TypeDB ontology
 - `docs/research/`: problem shortlist, technical requirements, unit economics and related notes
