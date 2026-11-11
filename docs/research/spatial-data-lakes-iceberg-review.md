@@ -76,7 +76,7 @@ It can be read and written from DuckDB, Spark, Trino, Polars and PyIceberg.
 - **Closed source and very new.** Its GitHub repo holds only an issue tracker: 0 stars, 2 commits, no releases. There's no security certification, and no licence terms are published. Our audit requirements and the risk of lock-in argue against a young closed vendor at the centre of the data layer.
 - **Gaps.** PyIceberg can't write v3 tables yet, which matters because Dagster ingest would use PyIceberg. The site doesn't say how it handles CRS or geography types. Dagster isn't mentioned, and its own scheduler overlaps with ours.
 
-**Verdict: use it as a benchmark, not as our platform.** It's a useful reference for what a geo-aware Iceberg catalog with scoped access looks like. One cheap experiment would be a managed account holding only **public** layers (CAR, IBAMA embargoes, territories) to try Iceberg v3 geometry with DuckDB. For the core platform we stay on open components we can host in Brazil:
+**Verdict: use it as a benchmark, not as our platform.** It's a useful reference for what a geo-aware Iceberg catalog with scoped access looks like. We won't trial it (decided 11 Nov). For the core platform we stay on open components we can host in Brazil:
 - PyIceberg/DuckDB
 - an open REST catalog (Lakekeeper or Polaris, on Postgres)
 - S3 in sa-east-1
