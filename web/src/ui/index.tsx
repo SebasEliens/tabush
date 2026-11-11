@@ -136,6 +136,22 @@ export function SegmentedControl<T extends string>({ label, value, options, onCh
   );
 }
 
+/* Switch ------------------------------------------------------------------ */
+// On/off for a single setting, such as showing a map layer. A real checkbox
+// with role="switch", so it works with keyboard (Space) and screen readers.
+export function Switch({ checked, onChange, label, hint, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; hint?: ReactNode; disabled?: boolean }) {
+  return (
+    <label className={cx("ui-switch", disabled && "ui-switch--disabled")}>
+      <input type="checkbox" role="switch" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
+      <span className="ui-switch__track" aria-hidden><span className="ui-switch__thumb" /></span>
+      <span className="ui-switch__text">
+        <span className="ui-switch__label">{label}</span>
+        {hint && <span className="ui-switch__hint">{hint}</span>}
+      </span>
+    </label>
+  );
+}
+
 /* Disclosure: show summary first, details on demand -------------------------- */
 export function Disclosure({ title, meta, defaultOpen, children }: { title: ReactNode; meta?: ReactNode; defaultOpen?: boolean; children: ReactNode }) {
   return (

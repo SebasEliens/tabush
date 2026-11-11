@@ -66,7 +66,10 @@ farm with an araucária pine.
 - **Icons.** `lucide-react`, 16px in UI, 14px in small controls.
 - **Map.** Desaturated basemap so data colours stand out; parcels use the
   risk ramp or status colours; selection is ink with a cyan inner line;
-  territories are dashed purple.
+  territories are dashed purple. Real public layers (indigenous lands) use
+  the same territory style and sit under the parcels; they get a `Switch`
+  in the "Public data" legend card with source, record count and snapshot
+  date, and a hover card naming the land, its legal phase and its source.
 
 ## 4. Tokens
 
@@ -93,6 +96,7 @@ paint) are mirrored in `tokens.ts`; keep both in sync.
 | `Card`, `Stat` | Grouped content; key figures with a label and a hint. |
 | `Meter`, `riskLevel` | 0–1 scores with a word (Very low … Very high). |
 | `SegmentedControl` | Switching a view mode (2–4 options). |
+| `Switch` | Turning one thing on or off, such as a map layer. The hint carries source and snapshot date. |
 | `Disclosure` | Details on demand. |
 | `SearchInput`, `Select`, `Kbd` | Inputs; `/` shortcut built in. |
 | `EmptyState`, `Skeleton` | Nothing to show (say why and what next); loading. |
