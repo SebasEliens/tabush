@@ -15,12 +15,27 @@ docker compose --profile dev up        # Vite hot reload on http://localhost:517
 cd web && npm install && npm run dev
 ```
 
+## Public data layers
+
+Real public layers are drawn on top of the mock data. The first one is
+FUNAI's indigenous land limits. Build its tiles from the repo root:
+
+```sh
+uv run python -m tabush.ingest.indigenous_lands   # ~1 min download, writes data/tiles/
+```
+
+The app reads `indigenous_lands.pmtiles` and its provenance file
+`indigenous_lands.json` from `TABUSH_TILES_URL` (default `/tiles`). Vite and
+the compose services serve `data/tiles/` there; in the cloud it will be object
+storage plus a CDN in a Brazil region. Without the tiles, the legend says the
+layer isn't loaded and the rest of the app works as before.
+
 ## Design notes
 
 - **Vendor agnostic.** The image is a plain static bundle on nginx (non-root,
   port 8080, `/healthz`). It runs on any container platform or static host.
-- **Runtime config, not build-time.** `TABUSH_API_URL` and
-  `TABUSH_MAP_STYLE_URL` are written to `/config.js` when the container
+- **Runtime config, not build-time.** `TABUSH_API_URL`,
+  `TABUSH_MAP_STYLE_URL` and `TABUSH_TILES_URL` are written to `/config.js` when the container
   starts, so one image serves every environment.
 - **API contract first.** `src/api/types.ts` defines the `TabushApi`
   interface the backend will implement; `src/api/mock/` is a stand-in.
@@ -42,5 +57,5 @@ is at `/design`. Principles and rules are in
 npm run check:contrast   # WCAG AA check of semantic colour pairs
 ```
 
-Stack: React 19, TypeScript, Vite, MapLibre GL, React Router, lucide icons,
+Stack: React 19, TypeScript, Vite, MapLibre GL, PMTiles, React Router, lucide icons,
 Inter + Outfit (self-hosted).

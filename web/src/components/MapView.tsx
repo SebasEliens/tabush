@@ -2,14 +2,18 @@ import { useEffect, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { Protocol } from "pmtiles";
 // MapLibre 6 loads its worker as a separate module; let Vite bundle it.
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { config } from "../config";
+import { tilesUrl, type PublicLayerMeta } from "../api/publicLayers";
 import type { RuralProperty, Territory } from "../api/types";
-import { statusText, worstSeverity } from "../format";
+import { dateLong, statusText, worstSeverity } from "../format";
 import { highlight, ink, riskRamp, statusColor, territoryColor } from "../design/tokens";
 
 maplibregl.setWorkerUrl(workerUrl);
+// Public layers are static PMTiles archives read with HTTP range requests.
+maplibregl.addProtocol("pmtiles", new Protocol().tile);
 
 export type ColorBy = "risk" | "compliance";
 
@@ -33,6 +37,9 @@ interface Props {
   territories: Territory[];
   selected?: string;
   colorBy: ColorBy;
+  /** Real indigenous land limits; undefined until their tiles are available. */
+  indigenousLands?: PublicLayerMeta;
+  showIndigenousLands: boolean;
   onSelect: (carCode: string) => void;
 }
 
@@ -56,7 +63,7 @@ const complianceColor: maplibregl.ExpressionSpecification = [
   "match", ["get", "status"], "block", statusColor.block, "warn", statusColor.warn, statusColor.ok,
 ];
 
-export function MapView({ properties, territories, selected, colorBy, onSelect }: Props) {
+export function MapView({ properties, territories, selected, colorBy, indigenousLands, showIndigenousLands, onSelect }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const onSelectRef = useRef(onSelect);
@@ -120,6 +127,16 @@ export function MapView({ properties, territories, selected, colorBy, onSelect }
   }, [properties, territories]);
 
   useWhenReady(mapRef, (map) => {
+    if (indigenousLands) addIndigenousLands(map, indigenousLands);
+  }, [indigenousLands]);
+
+  useWhenReady(mapRef, (map) => {
+    for (const id of INDIGENOUS_LAYERS) {
+      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", showIndigenousLands ? "visible" : "none");
+    }
+  }, [showIndigenousLands, indigenousLands]);
+
+  useWhenReady(mapRef, (map) => {
     map.setPaintProperty("parcels-fill", "fill-color", colorBy === "risk" ? riskColor : complianceColor);
   }, [colorBy]);
 
@@ -137,6 +154,45 @@ export function MapView({ properties, territories, selected, colorBy, onSelect }
 
   return <div ref={ref} className="map" />;
 }
+
+const INDIGENOUS_LAYERS = ["indigenous-lands-fill", "indigenous-lands-line"];
+
+// Indigenous land limits from the public PMTiles layer, drawn under the
+// parcels in the territory style (dashed purple), with a hover card that
+// names the land, its legal phase and the record's source and date.
+function addIndigenousLands(map: maplibregl.Map, meta: PublicLayerMeta) {
+  if (map.getSource("indigenous-lands")) return;
+  map.addSource("indigenous-lands", {
+    type: "vector",
+    url: `pmtiles://${tilesUrl(`${meta.layer}.pmtiles`)}`,
+    attribution: meta.source,
+  });
+  const common = { source: "indigenous-lands", "source-layer": meta.layer } as const;
+  map.addLayer({ id: "indigenous-lands-fill", type: "fill", ...common, paint: { "fill-color": territoryColor, "fill-opacity": 0.18 } }, "territories-fill");
+  map.addLayer({ id: "indigenous-lands-line", type: "line", ...common, paint: { "line-color": territoryColor, "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.75, 10, 2], "line-dasharray": [3, 2] } }, "territories-fill");
+
+  const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 8 });
+  map.on("mousemove", "indigenous-lands-fill", (e) => {
+    // Parcels sit on top and have their own card.
+    if (map.queryRenderedFeatures(e.point, { layers: ["parcels-fill"] }).length) return popup.remove();
+    const f = e.features?.[0];
+    if (!f) return;
+    const { name, phase, area_ha } = f.properties as { name: string; phase: string; area_ha: number };
+    const area = Number(area_ha).toLocaleString("en-GB", { maximumFractionDigits: 0 });
+    popup
+      .setLngLat(e.lngLat)
+      .setHTML(
+        `<strong>Indigenous land: ${escapeHtml(name)}</strong><br/>` +
+          `<span style="color:var(--color-text-secondary)">${escapeHtml(phase)} · ${area} ha<br/>` +
+          `${escapeHtml(meta.source)} · snapshot ${dateLong(meta.snapshot_date)}</span>`,
+      )
+      .addTo(map);
+  });
+  map.on("mouseleave", "indigenous-lands-fill", () => popup.remove());
+}
+
+const escapeHtml = (s: string) =>
+  String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 // Runs fn once the map has loaded, and again whenever deps change.
 function useWhenReady(

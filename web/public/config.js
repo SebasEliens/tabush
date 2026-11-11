@@ -3,4 +3,5 @@
 window.__TABUSH_CONFIG__ = {
   apiUrl: "",          // empty = use the in-browser mock API
   mapStyleUrl: "",     // empty = built-in OpenStreetMap raster style
+  tilesUrl: "/tiles",  // public data layers (PMTiles); see data/tiles
 };

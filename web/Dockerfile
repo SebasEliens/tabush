@@ -22,6 +22,6 @@ USER root
 RUN chmod +x /docker-entrypoint.d/40-tabush-config.sh \
  && chown -R nginx:nginx /usr/share/nginx/html
 USER nginx
-ENV TABUSH_API_URL="" TABUSH_MAP_STYLE_URL=""
+ENV TABUSH_API_URL="" TABUSH_MAP_STYLE_URL="" TABUSH_TILES_URL="/tiles"
 EXPOSE 8080
 HEALTHCHECK CMD wget -qO- http://127.0.0.1:8080/healthz || exit 1

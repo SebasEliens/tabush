@@ -2,7 +2,7 @@
 // they actually render, so reviews happen against the real thing.
 import { useState } from "react";
 import { Download, Leaf, Plus, ShieldCheck, Thermometer, Trash2 } from "lucide-react";
-import { Badge, Button, Callout, Card, Disclosure, EmptyState, Kbd, Meter, SearchInput, SegmentedControl, Stat, StatusBadge } from "../ui";
+import { Badge, Button, Callout, Card, Disclosure, EmptyState, Kbd, Meter, SearchInput, SegmentedControl, Stat, StatusBadge, Switch } from "../ui";
 import { Landscape } from "../ui/Landscape";
 import { Logo } from "../ui/Logo";
 
@@ -26,6 +26,7 @@ const typeScale = [
 export function DesignPage() {
   const [seg, setSeg] = useState<"risk" | "compliance">("risk");
   const [q, setQ] = useState("");
+  const [layerOn, setLayerOn] = useState(true);
   return (
     <div className="page">
       <div className="hero">
@@ -111,6 +112,7 @@ export function DesignPage() {
               <Meter label="Flood" value={0.48} />
               <Meter label="Heat" value={0.21} />
             </div>
+            <Switch checked={layerOn} onChange={setLayerOn} label="Indigenous lands" hint="FUNAI via IBGE · snapshot 11 Nov 2026" />
             <p className="text-sm">Keyboard hint: press <Kbd>/</Kbd> to search.</p>
           </div>
         </Card>

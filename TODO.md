@@ -15,7 +15,8 @@ Each item maps to one atomic commit. Move items to `CHANGELOG.md` when done.
 
 - [ ] SICAR/CAR property boundaries and status for the pilot municipality
 - [ ] INCRA SIGEF land titles
-- [ ] Territories: FUNAI indigenous lands, INCRA quilombolas and settlements, CNUC protected areas, SFB CNFP public forests
+- [x] FUNAI indigenous lands (IBGE Census 2022 copy; FUNAI's own server for Brazil-hosted runs), shown on the web map as PMTiles
+- [ ] Territories: INCRA quilombolas and settlements, CNUC protected areas, SFB CNFP public forests
 - [ ] IBAMA embargoes (+ state list if available) and MTE *lista suja*
 - [ ] MapBiomas land use and Alerta; INPE PRODES/DETER
 - [ ] Each source: provenance columns, CRS guard, validity check, dated GeoParquet snapshot, load to PostGIS
