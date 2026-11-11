@@ -2,19 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Leaf, ShieldCheck, Thermometer } from "lucide-react";
 import { api } from "../api/client";
+import { fetchLayerMeta, type PublicLayerMeta } from "../api/publicLayers";
 import type { PortfolioSummary, RuralProperty, Territory } from "../api/types";
 import { MapView, type ColorBy } from "../components/MapView";
 import { PanelWelcome, PropertyPanel } from "../components/PropertyPanel";
 import { riskRamp } from "../design/tokens";
-import { statusText, statusTone, worstSeverity } from "../format";
+import { dateLong, statusText, statusTone, worstSeverity } from "../format";
 import { useTenant } from "../tenant";
-import { EmptyState, SearchInput, SegmentedControl, Skeleton, StatusBadge, riskLevel } from "../ui";
+import { EmptyState, SearchInput, SegmentedControl, Skeleton, StatusBadge, Switch, riskLevel } from "../ui";
 
 export function PropertiesPage() {
   const { tenant } = useTenant();
   const [props, setProps] = useState<RuralProperty[]>();
   const [summary, setSummary] = useState<PortfolioSummary>();
   const [territories, setTerritories] = useState<Territory[]>([]);
+  const [indigenousLands, setIndigenousLands] = useState<PublicLayerMeta | null>();
+  const [showIndigenousLands, setShowIndigenousLands] = useState(true);
   const [query, setQuery] = useState("");
   const [colorBy, setColorBy] = useState<ColorBy>("risk");
   const [params, setParams] = useSearchParams();
@@ -23,6 +26,7 @@ export function PropertiesPage() {
 
   useEffect(() => {
     api.listTerritories().then(setTerritories);
+    fetchLayerMeta("indigenous_lands").then((m) => setIndigenousLands(m ?? null));
   }, []);
   useEffect(() => {
     if (!tenant) return;
@@ -78,7 +82,15 @@ export function PropertiesPage() {
       </aside>
 
       <div className="map-area">
-        <MapView properties={props ?? []} territories={territories} selected={selected} colorBy={colorBy} onSelect={setSelected} />
+        <MapView
+          properties={props ?? []}
+          territories={territories}
+          selected={selected}
+          colorBy={colorBy}
+          indigenousLands={indigenousLands ?? undefined}
+          showIndigenousLands={showIndigenousLands}
+          onSelect={setSelected}
+        />
         <div className="map-overlay">
           <SegmentedControl
             label="Colour properties by"
@@ -105,6 +117,21 @@ export function PropertiesPage() {
               </>
             )}
             <div><span className="legend__swatch legend__swatch--territory" />Protected or traditional territory</div>
+          </div>
+          <div className="map-card legend" aria-label="Public data layers">
+            <strong>Public data</strong>
+            {indigenousLands === undefined ? (
+              <Skeleton width="80%" height={10} />
+            ) : indigenousLands ? (
+              <Switch
+                checked={showIndigenousLands}
+                onChange={setShowIndigenousLands}
+                label="Indigenous lands"
+                hint={`${indigenousLands.features} lands · ${indigenousLands.source} · snapshot ${dateLong(indigenousLands.snapshot_date)}`}
+              />
+            ) : (
+              <span>Indigenous lands not loaded yet. Run the indigenous lands ingest to build the layer.</span>
+            )}
           </div>
         </div>
       </div>
