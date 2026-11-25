@@ -1,3 +1,4 @@
+import type { TenureFlag } from "./api/publicLayers";
 import type { FlagType, RuralProperty, Severity } from "./api/types";
 import type { Tone } from "./ui";
 
@@ -37,3 +38,30 @@ export const verdict: Record<Exclude<Status, "info">, { title: string; body: str
   warn: { title: "Needs a closer look", body: "Nothing blocks credit, but these findings should be checked before approval." },
   ok: { title: "No compliance issues found", body: "Checked against territories, embargoes, deforestation and the CAR registry." },
 };
+
+// Public land-tenure layers (CAR records, protected areas). Plain words for
+// the codes SICAR and CNUC publish.
+export const tenureFlagText: Record<TenureFlag, string> = {
+  indigenous_land: "Overlaps an indigenous land",
+  public_protected_area: "Overlaps a protected area that must be public land",
+  car_overlap: "Overlaps another CAR claim",
+  none: "No overlap found",
+  not_assessed: "Not assessed",
+};
+export const carTypeText: Record<string, string> = {
+  IRU: "Private rural property",
+  AST: "Agrarian reform settlement",
+  PCT: "Traditional community territory",
+};
+export const carStatusText: Record<string, string> = {
+  AT: "Active",
+  PE: "Pending",
+  SU: "Suspended",
+  CA: "Cancelled",
+};
+export const sizeClassText: Record<string, string> = {
+  small: "Small property, family-farm size (up to 4 fiscal modules)",
+  medium: "Medium property (4 to 15 fiscal modules)",
+  large: "Large property (over 15 fiscal modules)",
+};
+export const hectares = (n: number) => `${Number(n).toLocaleString("en-GB", { maximumFractionDigits: Number(n) < 10 ? 1 : 0 })} ha`;

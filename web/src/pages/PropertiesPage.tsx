@@ -2,22 +2,25 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Leaf, ShieldCheck, Thermometer } from "lucide-react";
 import { api } from "../api/client";
-import { fetchLayerMeta, type PublicLayerMeta } from "../api/publicLayers";
+import { fetchLayerMeta, PUBLIC_LAYER_STACK, type PublicLayerId, type PublicLayerMeta } from "../api/publicLayers";
 import type { PortfolioSummary, RuralProperty, Territory } from "../api/types";
 import { MapView, type ColorBy } from "../components/MapView";
+import { PublicLayersLegend } from "../components/PublicLayersLegend";
 import { PanelWelcome, PropertyPanel } from "../components/PropertyPanel";
 import { riskRamp } from "../design/tokens";
-import { dateLong, statusText, statusTone, worstSeverity } from "../format";
+import { statusText, statusTone, worstSeverity } from "../format";
 import { useTenant } from "../tenant";
-import { EmptyState, SearchInput, SegmentedControl, Skeleton, StatusBadge, Switch, riskLevel } from "../ui";
+import { EmptyState, SearchInput, SegmentedControl, Skeleton, StatusBadge, riskLevel } from "../ui";
 
 export function PropertiesPage() {
   const { tenant } = useTenant();
   const [props, setProps] = useState<RuralProperty[]>();
   const [summary, setSummary] = useState<PortfolioSummary>();
   const [territories, setTerritories] = useState<Territory[]>([]);
-  const [indigenousLands, setIndigenousLands] = useState<PublicLayerMeta | null>();
-  const [showIndigenousLands, setShowIndigenousLands] = useState(true);
+  // undefined while loading, null when a layer's tiles haven't been built
+  const [layerMeta, setLayerMeta] = useState<Partial<Record<PublicLayerId, PublicLayerMeta | null>>>({});
+  const [visibleLayers, setVisibleLayers] = useState<Record<PublicLayerId, boolean>>({ protected_areas: true, indigenous_lands: true, rural_properties: true });
+  const [focus, setFocus] = useState<{ bbox: [number, number, number, number] }>();
   const [query, setQuery] = useState("");
   const [colorBy, setColorBy] = useState<ColorBy>("risk");
   const [params, setParams] = useSearchParams();
@@ -26,7 +29,9 @@ export function PropertiesPage() {
 
   useEffect(() => {
     api.listTerritories().then(setTerritories);
-    fetchLayerMeta("indigenous_lands").then((m) => setIndigenousLands(m ?? null));
+    for (const id of PUBLIC_LAYER_STACK) {
+      fetchLayerMeta(id).then((m) => setLayerMeta((prev) => ({ ...prev, [id]: m ?? null })));
+    }
   }, []);
   useEffect(() => {
     if (!tenant) return;
@@ -42,6 +47,10 @@ export function PropertiesPage() {
       .sort((a, b) => b.risk.overall - a.risk.overall);
   }, [props, query]);
   const current = props?.find((p) => p.carCode === selected);
+  const loadedLayers = useMemo(
+    () => Object.fromEntries(Object.entries(layerMeta).filter(([, m]) => m)) as Partial<Record<PublicLayerId, PublicLayerMeta>>,
+    [layerMeta],
+  );
 
   return (
     <div className="workspace">
@@ -87,8 +96,9 @@ export function PropertiesPage() {
           territories={territories}
           selected={selected}
           colorBy={colorBy}
-          indigenousLands={indigenousLands ?? undefined}
-          showIndigenousLands={showIndigenousLands}
+          publicLayers={loadedLayers}
+          visibleLayers={visibleLayers}
+          focus={focus}
           onSelect={setSelected}
         />
         <div className="map-overlay">
@@ -118,21 +128,12 @@ export function PropertiesPage() {
             )}
             <div><span className="legend__swatch legend__swatch--territory" />Protected or traditional territory</div>
           </div>
-          <div className="map-card legend" aria-label="Public data layers">
-            <strong>Public data</strong>
-            {indigenousLands === undefined ? (
-              <Skeleton width="80%" height={10} />
-            ) : indigenousLands ? (
-              <Switch
-                checked={showIndigenousLands}
-                onChange={setShowIndigenousLands}
-                label="Indigenous lands"
-                hint={`${indigenousLands.features} lands · ${indigenousLands.source} · snapshot ${dateLong(indigenousLands.snapshot_date)}`}
-              />
-            ) : (
-              <span>Indigenous lands not loaded yet. Run the indigenous lands ingest to build the layer.</span>
-            )}
-          </div>
+          <PublicLayersLegend
+            meta={layerMeta}
+            visible={visibleLayers}
+            onToggle={(id, on) => setVisibleLayers((v) => ({ ...v, [id]: on }))}
+            onFocus={(bbox) => setFocus({ bbox })}
+          />
         </div>
       </div>
 
