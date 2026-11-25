@@ -18,7 +18,7 @@ services:
       TABUSH_MAP_STYLE_URL: ""    # empty = OSM raster tiles
       TABUSH_TILES_URL: "/tiles"  # public data layers; object storage + CDN in the cloud
     volumes:
-      # Built by `uv run python -m tabush.ingest.indigenous_lands`; never committed.
+      # Built by the tabush.ingest modules (see web/README.md); never committed.
       - ./data/tiles:/usr/share/nginx/html/tiles:ro
 
   web-dev:

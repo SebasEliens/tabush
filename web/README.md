@@ -17,18 +17,29 @@ cd web && npm install && npm run dev
 
 ## Public data layers
 
-Real public layers are drawn on top of the mock data. The first one is
-FUNAI's indigenous land limits. Build its tiles from the repo root:
+Real public land-tenure layers are drawn under the mock data, each with a
+switch, source and snapshot date in the "Land tenure" legend card. Build their
+tiles from the repo root, in this order (the CAR step measures overlaps against
+the first two):
 
 ```sh
-uv run python -m tabush.ingest.indigenous_lands   # ~1 min download, writes data/tiles/
+uv run python -m tabush.ingest.indigenous_lands   # FUNAI limits via IBGE, ~1 min
+uv run python -m tabush.ingest.protected_areas    # MMA CNUC, ~1 min
+uv run python -m tabush.ingest.car                # CAR for Canguçu (RS), ~1 min
+uv run python -m tabush.ingest.car --municipio 4304507 --municipio 1507300  # + São Félix do Xingu (PA)
 ```
 
-The app reads `indigenous_lands.pmtiles` and its provenance file
-`indigenous_lands.json` from `TABUSH_TILES_URL` (default `/tiles`). Vite and
-the compose services serve `data/tiles/` there; in the cloud it will be object
-storage plus a CDN in a Brazil region. Without the tiles, the legend says the
-layer isn't loaded and the rest of the app works as before.
+| Layer | Source | Shown as |
+|---|---|---|
+| Rural properties (CAR) | SICAR public WFS | Outline; red fill if it overlaps an indigenous land or a protected area that must be public land, amber if 20%+ overlaps another CAR claim |
+| Indigenous lands | FUNAI limits via IBGE Census 2022 | Dashed purple |
+| Protected areas | MMA CNUC register | Teal; stronger fill where the law requires public land |
+
+The app reads `<layer>.pmtiles` and its provenance file `<layer>.json` from
+`TABUSH_TILES_URL` (default `/tiles`). Vite and the compose services serve
+`data/tiles/` there; in the cloud it will be object storage plus a CDN in a
+Brazil region. A layer whose tiles are missing says so in the legend, and the
+rest of the app works as before.
 
 ## Design notes
 

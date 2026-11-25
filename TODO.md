@@ -13,20 +13,23 @@ Each item maps to one atomic commit. Move items to `CHANGELOG.md` when done.
 
 ## Milestone 1 — Ingest (one module per source in `src/tabush/ingest/`)
 
-- [ ] SICAR/CAR property boundaries and status for the pilot municipality
-- [ ] INCRA SIGEF land titles
+- [x] SICAR/CAR property boundaries and status for pilot municipalities (public WFS), with legal size class, shown on the web map
+- [ ] INCRA SIGEF land titles (INCRA's servers refuse non-Brazil IPs: needs a Brazil-hosted run)
 - [x] FUNAI indigenous lands (IBGE Census 2022 copy; FUNAI's own server for Brazil-hosted runs), shown on the web map as PMTiles
-- [ ] Territories: INCRA quilombolas and settlements, CNUC protected areas, SFB CNFP public forests
+- [x] CNUC protected areas, with public-domain categories per SNUC, shown on the web map
+- [ ] Territories: INCRA quilombolas and settlements, SFB CNFP public forests (both block non-Brazil IPs)
 - [ ] IBAMA embargoes (+ state list if available) and MTE *lista suja*
 - [ ] MapBiomas land use and Alerta; INPE PRODES/DETER
 - [ ] Each source: provenance columns, CRS guard, validity check, dated GeoParquet snapshot, load to PostGIS
 
 ## Milestone 2 — Overlaps and graph
 
-- [ ] PostGIS overlap queries: property × territory, property × embargo, property × deforestation, CAR × SIGEF (IoU)
+- [x] Tenure overlaps in GeoPandas: CAR × CAR, CAR × indigenous land, CAR × public protected area (`tabush.risk.tenure_overlaps`)
+- [ ] Move overlap queries to PostGIS; add property × embargo, property × deforestation, CAR × SIGEF (IoU)
 - [ ] H3 indexing of parcels (res 9)
 - [ ] Load entities and overlap relations into the graph with `source`, `snapshot_date`, `confidence`
-- [ ] Flag duplicate/suspicious CAR overlaps
+- [x] Flag duplicate/suspicious CAR overlaps (`tenure_flag`, overlap rows with confidence)
+- [ ] Validate overlap thresholds against a hand-checked sample in the pilot municipality
 
 ## Milestone 3 — Compliance report (C1)
 
