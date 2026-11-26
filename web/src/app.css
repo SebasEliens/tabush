@@ -57,7 +57,12 @@ main { flex: 1; min-height: 0; overflow: auto; }
 .legend__ramp { display: flex; height: 10px; border-radius: var(--radius-full); overflow: hidden; }
 .legend__ramp span { flex: 1; }
 .legend__swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: var(--space-2); vertical-align: -2px; }
+.legend__sub { display: flex; flex-direction: column; gap: 4px; padding-left: calc(32px + var(--space-2)); }
+.legend__sub .num { font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+.legend__places { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-left: calc(-1 * var(--space-2)); }
+.legend code { font-family: var(--font-mono); font-size: 0.95em; }
 .legend__swatch--territory { background: var(--color-territory-bg); border: 2px dashed var(--color-territory); }
+.maplibregl-popup { z-index: calc(var(--z-map-controls) + 1); } /* hover cards above the legend */
 .maplibregl-popup-content { font-family: var(--font-sans); border-radius: var(--radius-md) !important; box-shadow: var(--shadow-lg) !important; padding: var(--space-2) var(--space-3) !important; }
 
 /* Property panel ------------------------------------------------------------ */

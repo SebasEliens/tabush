@@ -68,8 +68,15 @@ farm with an araucária pine.
   risk ramp or status colours; selection is ink with a cyan inner line;
   territories are dashed purple. Real public layers (indigenous lands) use
   the same territory style and sit under the parcels; they get a `Switch`
-  in the "Public data" legend card with source, record count and snapshot
-  date, and a hover card naming the land, its legal phase and its source.
+  in the "Land tenure · public data" legend card with source, record count and
+  snapshot date, and a hover card naming the land, its legal phase and its source.
+  Protected areas are teal (`--color-protected`), with a stronger fill where the
+  law requires public land. CAR records are thin neutral outlines
+  (`--color-parcel-outline`) and only get a fill when they carry a tenure
+  finding: red for overlap with indigenous or public protected land, amber for
+  overlap with another CAR claim, grey (`--color-not-assessed`) for settlements,
+  traditional territories and cancelled records. Layer order, bottom to top:
+  protected areas, indigenous lands, CAR records, then the tenant's parcels.
 
 ## 4. Tokens
 

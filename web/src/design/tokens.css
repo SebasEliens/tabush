@@ -32,7 +32,8 @@
   --cyan-700: #0a6e89;
   --cyan-800: #0b566b;
 
-  --teal-700: #0a6f6c; /* bridge between pasture and sky in the brand gradient */
+  --teal-50: #e6f3f2;
+  --teal-700: #0a6f6c; /* bridge between pasture and sky in the brand gradient; protected areas */
 
   --orange-50: #fff1e8;
   --orange-200: #fcc6a2;
@@ -121,6 +122,12 @@
 
   --color-territory: var(--purple-400);
   --color-territory-bg: var(--purple-50);
+  /* Protected areas (conservation units) on the map; teal so it isn't read as "Clear" */
+  --color-protected: var(--teal-700);
+  --color-protected-bg: var(--teal-50);
+  /* Outline of public CAR records with no tenure finding */
+  --color-parcel-outline: var(--neutral-500);
+  --color-not-assessed: var(--neutral-400);
 
   /* Sequential climate-risk ramp, low → high (data viz only) */
   --risk-1: #fdf0c7;

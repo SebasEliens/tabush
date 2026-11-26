@@ -12,6 +12,7 @@ const palettes: { name: string; vars: string[] }[] = [
   { name: "Orange (spark)", vars: ["orange-50", "orange-200", "orange-400", "orange-500", "orange-700"] },
   { name: "Neutral", vars: ["neutral-0", "neutral-50", "neutral-100", "neutral-200", "neutral-300", "neutral-400", "neutral-500", "neutral-600", "neutral-700", "neutral-800", "neutral-900"] },
   { name: "Climate-risk ramp", vars: ["risk-1", "risk-2", "risk-3", "risk-4", "risk-5"] },
+  { name: "Map: land tenure", vars: ["purple-400", "purple-50", "teal-700", "teal-50", "neutral-500"] },
 ];
 
 const typeScale = [

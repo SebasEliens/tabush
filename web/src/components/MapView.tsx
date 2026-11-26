@@ -6,10 +6,10 @@ import { Protocol } from "pmtiles";
 // MapLibre 6 loads its worker as a separate module; let Vite bundle it.
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { config } from "../config";
-import { tilesUrl, type PublicLayerMeta } from "../api/publicLayers";
+import { PUBLIC_LAYER_STACK, tilesUrl, type PublicLayerId, type PublicLayerMeta, type TenureFlag } from "../api/publicLayers";
 import type { RuralProperty, Territory } from "../api/types";
-import { dateLong, statusText, worstSeverity } from "../format";
-import { highlight, ink, riskRamp, statusColor, territoryColor } from "../design/tokens";
+import { carStatusText, carTypeText, dateLong, hectares, sizeClassText, statusText, tenureFlagText, worstSeverity } from "../format";
+import { highlight, ink, notAssessedColor, parcelOutline, protectedColor, riskRamp, statusColor, territoryColor } from "../design/tokens";
 
 maplibregl.setWorkerUrl(workerUrl);
 // Public layers are static PMTiles archives read with HTTP range requests.
@@ -37,9 +37,11 @@ interface Props {
   territories: Territory[];
   selected?: string;
   colorBy: ColorBy;
-  /** Real indigenous land limits; undefined until their tiles are available. */
-  indigenousLands?: PublicLayerMeta;
-  showIndigenousLands: boolean;
+  /** Real public layers whose tiles are available. */
+  publicLayers: Partial<Record<PublicLayerId, PublicLayerMeta>>;
+  visibleLayers: Record<PublicLayerId, boolean>;
+  /** Fly to these lon/lat bounds; a new object each time the user asks. */
+  focus?: { bbox: [number, number, number, number] };
   onSelect: (carCode: string) => void;
 }
 
@@ -63,7 +65,7 @@ const complianceColor: maplibregl.ExpressionSpecification = [
   "match", ["get", "status"], "block", statusColor.block, "warn", statusColor.warn, statusColor.ok,
 ];
 
-export function MapView({ properties, territories, selected, colorBy, indigenousLands, showIndigenousLands, onSelect }: Props) {
+export function MapView({ properties, territories, selected, colorBy, publicLayers, visibleLayers, focus, onSelect }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const onSelectRef = useRef(onSelect);
@@ -110,6 +112,7 @@ export function MapView({ properties, territories, selected, colorBy, indigenous
         hovered = undefined;
         popup.remove();
       });
+      addPublicHover(map);
       mapRef.current = map;
     });
     return () => {
@@ -127,14 +130,18 @@ export function MapView({ properties, territories, selected, colorBy, indigenous
   }, [properties, territories]);
 
   useWhenReady(mapRef, (map) => {
-    if (indigenousLands) addIndigenousLands(map, indigenousLands);
-  }, [indigenousLands]);
+    for (const id of PUBLIC_LAYER_STACK) {
+      const meta = publicLayers[id];
+      if (meta) addPublicLayer(map, id, meta);
+      for (const layer of PUBLIC_STYLE[id].layers) {
+        if (map.getLayer(layer.id)) map.setLayoutProperty(layer.id, "visibility", visibleLayers[id] ? "visible" : "none");
+      }
+    }
+  }, [publicLayers, visibleLayers]);
 
   useWhenReady(mapRef, (map) => {
-    for (const id of INDIGENOUS_LAYERS) {
-      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", showIndigenousLands ? "visible" : "none");
-    }
-  }, [showIndigenousLands, indigenousLands]);
+    if (focus) map.fitBounds([[focus.bbox[0], focus.bbox[1]], [focus.bbox[2], focus.bbox[3]]], { padding: 40, duration: 900 });
+  }, [focus]);
 
   useWhenReady(mapRef, (map) => {
     map.setPaintProperty("parcels-fill", "fill-color", colorBy === "risk" ? riskColor : complianceColor);
@@ -155,43 +162,109 @@ export function MapView({ properties, territories, selected, colorBy, indigenous
   return <div ref={ref} className="map" />;
 }
 
-const INDIGENOUS_LAYERS = ["indigenous-lands-fill", "indigenous-lands-line"];
+// Public land-tenure layers, drawn under the tenant's parcels in a fixed
+// order (protected areas, then indigenous lands, then CAR records) whatever
+// order their tiles arrive in.
+type LayerSpec = Omit<maplibregl.FillLayerSpecification, "source" | "source-layer"> | Omit<maplibregl.LineLayerSpecification, "source" | "source-layer">;
 
-// Indigenous land limits from the public PMTiles layer, drawn under the
-// parcels in the territory style (dashed purple), with a hover card that
-// names the land, its legal phase and the record's source and date.
-function addIndigenousLands(map: maplibregl.Map, meta: PublicLayerMeta) {
-  if (map.getSource("indigenous-lands")) return;
-  map.addSource("indigenous-lands", {
-    type: "vector",
-    url: `pmtiles://${tilesUrl(`${meta.layer}.pmtiles`)}`,
-    attribution: meta.source,
-  });
-  const common = { source: "indigenous-lands", "source-layer": meta.layer } as const;
-  map.addLayer({ id: "indigenous-lands-fill", type: "fill", ...common, paint: { "fill-color": territoryColor, "fill-opacity": 0.18 } }, "territories-fill");
-  map.addLayer({ id: "indigenous-lands-line", type: "line", ...common, paint: { "line-color": territoryColor, "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.75, 10, 2], "line-dasharray": [3, 2] } }, "territories-fill");
+const flagColor: maplibregl.ExpressionSpecification = [
+  "match", ["get", "tenure_flag"],
+  ["indigenous_land", "public_protected_area"], statusColor.block,
+  "car_overlap", statusColor.warn,
+  "not_assessed", notAssessedColor,
+  parcelOutline,
+];
+const flagged: maplibregl.ExpressionSpecification = ["in", ["get", "tenure_flag"], ["literal", ["indigenous_land", "public_protected_area", "car_overlap"]]];
+const byZoom = (lo: number, hi: number): maplibregl.ExpressionSpecification => ["interpolate", ["linear"], ["zoom"], 4, lo, 12, hi];
 
-  const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 8 });
-  map.on("mousemove", "indigenous-lands-fill", (e) => {
-    // Parcels sit on top and have their own card.
-    if (map.queryRenderedFeatures(e.point, { layers: ["parcels-fill"] }).length) return popup.remove();
-    const f = e.features?.[0];
-    if (!f) return;
-    const { name, phase, area_ha } = f.properties as { name: string; phase: string; area_ha: number };
-    const area = Number(area_ha).toLocaleString("en-GB", { maximumFractionDigits: 0 });
-    popup
-      .setLngLat(e.lngLat)
-      .setHTML(
-        `<strong>Indigenous land: ${escapeHtml(name)}</strong><br/>` +
-          `<span style="color:var(--color-text-secondary)">${escapeHtml(phase)} · ${area} ha<br/>` +
-          `${escapeHtml(meta.source)} · snapshot ${dateLong(meta.snapshot_date)}</span>`,
-      )
-      .addTo(map);
+const PUBLIC_STYLE: Record<PublicLayerId, { layers: LayerSpec[]; hover: string }> = {
+  protected_areas: {
+    hover: "protected-areas-fill",
+    layers: [
+      // Stronger fill where the law requires public land.
+      { id: "protected-areas-fill", type: "fill", paint: { "fill-color": protectedColor, "fill-opacity": ["case", ["get", "public_domain"], 0.16, 0.06] } },
+      { id: "protected-areas-line", type: "line", paint: { "line-color": protectedColor, "line-width": byZoom(0.5, 1.75), "line-opacity": 0.9 } },
+    ],
+  },
+  indigenous_lands: {
+    hover: "indigenous-lands-fill",
+    layers: [
+      { id: "indigenous-lands-fill", type: "fill", paint: { "fill-color": territoryColor, "fill-opacity": 0.18 } },
+      { id: "indigenous-lands-line", type: "line", paint: { "line-color": territoryColor, "line-width": byZoom(0.75, 2), "line-dasharray": [3, 2] } },
+    ],
+  },
+  rural_properties: {
+    hover: "rural-properties-fill",
+    layers: [
+      // Calm by default: only records with a finding get a coloured fill.
+      { id: "rural-properties-fill", type: "fill", minzoom: 6, paint: { "fill-color": flagColor, "fill-opacity": ["case", flagged, 0.4, 0.04] } },
+      { id: "rural-properties-line", type: "line", minzoom: 6, paint: { "line-color": flagColor, "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.2, 14, 1.25], "line-opacity": 0.85 } },
+    ],
+  },
+};
+
+function addPublicLayer(map: maplibregl.Map, id: PublicLayerId, meta: PublicLayerMeta) {
+  if (map.getSource(id)) return;
+  map.addSource(id, { type: "vector", url: `pmtiles://${tilesUrl(`${meta.layer}.pmtiles`)}`, attribution: meta.source });
+  // Insert under the first layer above us in the stack that's already on the map.
+  const above = PUBLIC_LAYER_STACK.slice(PUBLIC_LAYER_STACK.indexOf(id) + 1)
+    .map((other) => PUBLIC_STYLE[other].layers[0].id)
+    .find((layerId) => map.getLayer(layerId));
+  for (const layer of PUBLIC_STYLE[id].layers) {
+    map.addLayer({ ...layer, source: id, "source-layer": meta.layer } as maplibregl.LayerSpecification, above ?? "territories-fill");
+  }
+  metaById[id] = meta;
+}
+const metaById: Partial<Record<PublicLayerId, PublicLayerMeta>> = {};
+
+// One hover card for all public layers: the topmost record under the pointer,
+// in plain words, with its source and snapshot date. The tenant's parcels sit
+// on top and have their own card.
+function addPublicHover(map: maplibregl.Map) {
+  const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 8, maxWidth: "320px" });
+  const order = [...PUBLIC_LAYER_STACK].reverse();
+  map.on("mousemove", (e) => {
+    const hoverLayers = order.map((id) => PUBLIC_STYLE[id].hover).filter((l) => map.getLayer(l));
+    if (!hoverLayers.length || map.queryRenderedFeatures(e.point, { layers: ["parcels-fill"] }).length) return popup.remove();
+    const hits = map.queryRenderedFeatures(e.point, { layers: hoverLayers });
+    const id = order.find((layer) => hits.some((f) => f.layer.id === PUBLIC_STYLE[layer].hover));
+    const f = hits.find((h) => id && h.layer.id === PUBLIC_STYLE[id].hover);
+    if (!id || !f) return popup.remove();
+    popup.setLngLat(e.lngLat).setHTML(hoverCard(id, f.properties ?? {}, metaById[id]!)).addTo(map);
   });
-  map.on("mouseleave", "indigenous-lands-fill", () => popup.remove());
+  map.getCanvas().addEventListener("mouseleave", () => popup.remove());
 }
 
-const escapeHtml = (s: string) =>
+function hoverCard(id: PublicLayerId, p: Record<string, unknown>, meta: PublicLayerMeta): string {
+  const muted = (html: string) => `<span style="color:var(--color-text-secondary)">${html}</span>`;
+  const source = `${escapeHtml(meta.source)} · snapshot ${dateLong(meta.snapshot_date)}`;
+  if (id === "indigenous_lands") {
+    return `<strong>Indigenous land: ${escapeHtml(p.name)}</strong><br/>` +
+      muted(`${escapeHtml(p.phase)} · ${hectares(Number(p.area_ha))}<br/>${source}`);
+  }
+  if (id === "protected_areas") {
+    const land = p.public_domain ? "Must be public land" : "Private land allowed";
+    return `<strong>${escapeHtml(titleCase(String(p.name)))}</strong><br/>` +
+      muted(`${escapeHtml(p.category)} · ${escapeHtml(p.sphere)} · ${land}<br/>${hectares(Number(p.area_ha))} · ${source}`);
+  }
+  const flag = p.tenure_flag as TenureFlag;
+  const share = (col: string) => `${Math.round(Number(p[col]))}% of its area`;
+  const finding =
+    flag === "indigenous_land" ? `${tenureFlagText[flag]} on ${share("indigenous_overlap_pct")}`
+    : flag === "public_protected_area" ? `${tenureFlagText[flag]} on ${share("protected_overlap_pct")}`
+    : flag === "car_overlap" ? `${tenureFlagText[flag]} on ${share("car_overlap_pct")} (${p.car_overlap_count} record${Number(p.car_overlap_count) === 1 ? "" : "s"})`
+    : flag === "not_assessed" ? "Not assessed: settlements, traditional territories and cancelled records are expected to overlap"
+    : tenureFlagText.none;
+  const tone = flag === "car_overlap" ? "warning" : flag === "none" || flag === "not_assessed" ? "secondary" : "danger";
+  const size = p.size_class ? `<br/>${escapeHtml(sizeClassText[String(p.size_class)])}` : "";
+  return `<strong>${escapeHtml(carTypeText[String(p.property_type)] ?? p.property_type)} · ${hectares(Number(p.area_ha))}</strong><br/>` +
+    `<span style="color:var(--color-${tone === "secondary" ? "text-secondary" : `${tone}-text`})">${escapeHtml(finding)}</span>` +
+    muted(`${size}<br/>CAR ${escapeHtml(p.source_id)}<br/>${escapeHtml(carStatusText[String(p.status)] ?? p.status)} · ${escapeHtml(p.municipality)} · registered ${dateLong(String(p.registered_on))}<br/>${source}`);
+}
+
+const titleCase = (s: string) => s.toLocaleLowerCase("pt-BR").replace(/(^|\s)(\p{L})/gu, (_, sp, c) => sp + c.toLocaleUpperCase("pt-BR")).replace(/ (D[aeo]s?|E) /g, (m) => m.toLowerCase());
+
+const escapeHtml = (s: unknown) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 // Runs fn once the map has loaded, and again whenever deps change.
