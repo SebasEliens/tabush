@@ -1,0 +1,69 @@
+---
+// Renders every Gherkin feature file in the repo's features/ folder as a
+// readable spec. The same files drive the tests, so the docs show exactly
+// what is being verified.
+import { AstBuilder, GherkinClassicTokenMatcher, Parser } from "@cucumber/gherkin";
+import { IdGenerator } from "@cucumber/messages";
+
+const REPO = "https://github.com/SebasEliens/tabush/blob/main";
+const files = import.meta.glob<string>("../../../features/**/*.feature", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+
+const parser = new Parser(new AstBuilder(IdGenerator.incrementing()), new GherkinClassicTokenMatcher());
+const features = Object.entries(files)
+  .map(([path, text]) => {
+    const repoPath = path.replace(/^(\.\.\/)+/, "");
+    const feature = parser.parse(text).feature;
+    if (!feature) return null;
+    const scenarios = feature.children.flatMap((child) => {
+      if (child.scenario) return [child.scenario];
+      if (child.rule) return child.rule.children.flatMap((c) => (c.scenario ? [c.scenario] : []));
+      return [];
+    });
+    const background = feature.children.find((c) => c.background)?.background;
+    return { repoPath, feature, scenarios, background };
+  })
+  .filter((f) => f !== null)
+  .sort((a, b) => a.repoPath.localeCompare(b.repoPath));
+---
+
+{features.length === 0 && (
+  <p>No feature files yet. Add one under <code>features/</code> and it appears here on the next build.</p>
+)}
+
+{features.map(({ repoPath, feature, scenarios, background }) => (
+  <section class="tb-widget spec" data-testid="feature">
+    <h3>{feature.name}</h3>
+    <p class="tb-muted">
+      <a href={`${REPO}/${repoPath}`}><code>{repoPath}</code></a>
+      {" · "}{scenarios.length} scenario{scenarios.length === 1 ? "" : "s"}
+      {feature.tags.length > 0 && <> · {feature.tags.map((t) => <code>{t.name}</code>)}</>}
+    </p>
+    {feature.description.trim() && <p class="desc">{feature.description.trim()}</p>}
+    {background && (
+      <ul class="steps">
+        {background.steps.map((s) => <li><strong>{s.keyword.trim()}</strong> {s.text}</li>)}
+      </ul>
+    )}
+    {scenarios.map((sc) => (
+      <details>
+        <summary><strong>{sc.keyword}:</strong> {sc.name}</summary>
+        <ul class="steps">
+          {sc.steps.map((s) => <li><strong>{s.keyword.trim()}</strong> {s.text}</li>)}
+        </ul>
+      </details>
+    ))}
+  </section>
+))}
+
+<style>
+  .spec { margin-block: 1rem; }
+  .spec h3 { margin: 0; font-family: var(--font-display); }
+  .desc { white-space: pre-line; }
+  .steps { list-style: none; padding-inline-start: 1rem; margin-block: 0.5rem; }
+  .steps strong { color: var(--sl-color-accent-high); }
+  details { margin-block: 0.4rem; }
+</style>

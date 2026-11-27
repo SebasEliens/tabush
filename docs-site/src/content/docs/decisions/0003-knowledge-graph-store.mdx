@@ -1,0 +1,64 @@
+---
+title: "0003: TypeDB 3.x for the knowledge graph, Neo4j as fallback"
+description: Proposed until the phase-0 spike shows multi-hop queries and LLM text-to-TypeQL work.
+sidebar: { order: 3 }
+---
+
+import AdrMeta from "../../../components/AdrMeta.astro";
+import DecisionMatrix from "../../../components/DecisionMatrix.tsx";
+
+<AdrMeta status="proposed" date="2026-10-17" />
+
+## Context
+
+The graph links properties, people, land titles, territories, embargoes and
+risk results. Every relation carries `source`, `snapshot_date` and
+`confidence`, so each flag in a report traces back to a record. Geometry
+stays in PostGIS; the graph holds H3 cells and overlap results. Sebas prefers
+TypeDB because its typed schema *is* the ontology
+([technical requirements §3](../../research/technical-requirements/)).
+
+## Options
+
+The scores below are a first pass from the caveats in the technical
+requirements, for discussion. With these weights it is close, and the
+result hinges on how well an LLM writes the query language. That is exactly
+what the phase-0 spike must measure.
+
+<DecisionMatrix
+  client:visible
+  chosen="typedb"
+  criteria={[
+    { id: "ontology", label: "Schema is the ontology", weight: 5, hint: "Types, inheritance and constraints checked by the database" },
+    { id: "nary", label: "Provenance on every relation", weight: 4, hint: "N-ary relations with attributes" },
+    { id: "deploy", label: "Self-host in a Brazil region", weight: 3 },
+    { id: "llm", label: "LLMs write good queries", weight: 3, hint: "For the talk-to-the-data layer" },
+    { id: "rdf", label: "RDF export (GeoSPARQL, FIBO)", weight: 2 },
+    { id: "algos", label: "Graph algorithms", weight: 1 },
+    { id: "geo", label: "Spatial support", weight: 1, hint: "Low weight: geometry lives in PostGIS anyway" },
+  ]}
+  options={[
+    { id: "typedb", label: "TypeDB 3.x", scores: { ontology: 5, nary: 5, deploy: 3, llm: 2, rdf: 2, algos: 2, geo: 2 }, note: "Community Edition is single-server; HA needs Cloud or Enterprise." },
+    { id: "neo4j", label: "Neo4j + OWL/SHACL", scores: { ontology: 2, nary: 4, deploy: 4, llm: 5, rdf: 4, algos: 5, geo: 3 }, note: "Ontology kept in OWL and mapped in with neosemantics." },
+    { id: "graphdb", label: "GraphDB (RDF)", scores: { ontology: 4, nary: 3, deploy: 3, llm: 3, rdf: 5, algos: 2, geo: 3 }, note: "Best if RDF and SPARQL interoperability matter most." },
+  ]}
+/>
+
+## Decision (proposed)
+
+Use **TypeDB 3.x**, with `schema/core.tql` as the ontology. Keep Neo4j as
+the fallback if the spike fails.
+
+The spike passes when:
+- `schema/core.tql` loads and sample data from the pilot municipality inserts.
+- Multi-hop questions ("which borrowers' properties overlap an embargo
+  through a shared owner?") return in under a second.
+- An LLM with few-shot examples writes correct TypeQL for most of the golden
+  questions used by the talk-to-the-data layer.
+
+## Consequences
+
+- Good: no separate OWL layer to keep in sync; provenance fits naturally on
+  n-ary relations.
+- Bad: an RDF mapping is needed for partners who want GeoSPARQL or FIBO.
+- Revisit after the spike; then mark this record accepted or superseded.

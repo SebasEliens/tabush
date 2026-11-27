@@ -27,6 +27,8 @@ schema/     TypeDB schema (earlier graph plan; see docs/research/talk-to-the-dat
 notebooks/  exploration (outputs stripped on commit)
 tests/
 docs/research/  design and market research
+docs-site/  living docs site (Astro Starlight), deployed to GitHub Pages
+features/   Gherkin feature files: the specs that tests and docs share
 archive/    retired earlier work (Genipabu vegetation-risk demo)
 ```
 
@@ -38,5 +40,8 @@ uvx pre-commit install     # install git hooks
 cp .env.example .env       # then fill in connection settings
 uv run pytest
 ```
+
+Living docs (research, clickable mock, decision records, specs): <https://sebaseliens.github.io/tabush/>.
+See [`docs-site/README.md`](docs-site/README.md) to run them locally.
 
 Agent and contributor conventions are in [`AGENTS.md`](AGENTS.md).

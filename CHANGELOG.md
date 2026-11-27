@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Git hooks moved from Lefthook to pre-commit (`.pre-commit-config.yaml`), adding ruff
 
 ### Added
+- Living docs site (`docs-site/`, Astro Starlight) deployed to GitHub Pages by `.github/workflows/docs.yml`: research and design notes synced from `docs/`, the web mock embedded live at `/app/`, a screenshot gallery, decision records with interactive illustrations (weighted decision matrix, H3 resolution explorer) and Gherkin specs from `features/` rendered as pages; a Playwright smoke test checks it on every build
+- `web/` builds under a sub-path (`vite build --base`), for the docs site
 - Semantic layer and open data: `semantic/taxonomy.ttl` (SKOS, AGROVOC links), `semantic/ontology.ttl` (GeoSPARQL, PROV-O, LADM terms) and `tabush.semantic.publish`, which writes GeoParquet 2.0 layers, the graph as `nodes`/`edges` Parquet tables, `concepts` and `semantic_model.json` to `data/open/`
 - "Ask the data" page (`/ask`): Claude turns a question into DuckDB SQL over the open files, runs it in the browser with DuckDB-WASM and explains the result with sources; worked examples without an API key
 - `tabush.ingest.municipalities`: IBGE boundaries with Census 2022 total, indigenous and in-TI population

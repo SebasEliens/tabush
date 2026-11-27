@@ -1,0 +1,49 @@
+---
+// Every image under docs/screenshots (synced to public/screenshots), grouped
+// by folder. PRs commit their visual proof there, so this is the visual
+// history of the app.
+import { readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+
+interface Props { folder?: string }
+const { folder } = Astro.props;
+const root = join(process.cwd(), "public/screenshots");
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const isImage = (n: string) => /\.(png|jpe?g|webp|gif)$/i.test(n);
+const groups = (() => {
+  try {
+    return readdirSync(root)
+      .filter((d) => statSync(join(root, d)).isDirectory() && (!folder || d === folder))
+      .sort()
+      .map((d) => ({ name: d, images: readdirSync(join(root, d)).filter(isImage).sort() }));
+  } catch {
+    return [];
+  }
+})();
+const caption = (n: string) => n.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+const title = (d: string) => d.replace(/[-_]+/g, " ").replace(/^./, (c) => c.toUpperCase());
+---
+
+{groups.length === 0 && <p>No screenshots yet.</p>}
+{groups.map((g) => (
+  <section data-testid="screenshot-group">
+    {!folder && <h3>{title(g.name)}</h3>}
+    <div class="grid not-content">
+      {g.images.map((img) => (
+        <figure>
+          <a href={`${base}/screenshots/${g.name}/${img}`}>
+            <img src={`${base}/screenshots/${g.name}/${img}`} alt={caption(img)} loading="lazy" />
+          </a>
+          <figcaption>{caption(img)}</figcaption>
+        </figure>
+      ))}
+    </div>
+  </section>
+))}
+
+<style>
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); margin-block: 0.75rem 1.5rem; }
+  figure { margin: 0; }
+  img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 0.5rem; border: 1px solid var(--sl-color-gray-5); }
+  figcaption { font-size: var(--sl-text-sm); color: var(--sl-color-gray-3); margin-top: 0.25rem; }
+</style>

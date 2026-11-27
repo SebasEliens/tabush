@@ -1,0 +1,11 @@
+---
+// Status line at the top of a decision record.
+interface Props { status: "proposed" | "accepted" | "superseded"; date: string; deciders?: string; supersededBy?: string }
+const { status, date, deciders = "Sebas", supersededBy } = Astro.props;
+const label = { proposed: "Proposed", accepted: "Accepted", superseded: "Superseded" }[status];
+---
+<p class="not-content meta">
+  <span class="tb-status" data-status={status}>{label}</span>
+  <span class="tb-muted">{date} · deciders: {deciders}{supersededBy && <> · superseded by {supersededBy}</>}</span>
+</p>
+<style>.meta { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }</style>

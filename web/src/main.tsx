@@ -10,7 +10,8 @@ import "./app.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
+    {/* basename lets the same build run under a sub-path, e.g. the docs site's /app/ */}
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
       <TenantProvider>
         <App />
       </TenantProvider>
