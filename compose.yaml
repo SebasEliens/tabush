@@ -17,9 +17,12 @@ services:
       TABUSH_API_URL: ""          # empty = in-browser mock API
       TABUSH_MAP_STYLE_URL: ""    # empty = OSM raster tiles
       TABUSH_TILES_URL: "/tiles"  # public data layers; object storage + CDN in the cloud
+      TABUSH_OPEN_DATA_URL: "/open"  # GeoParquet 2.0 + graph tables for "Ask the data"
+      TABUSH_LLM_URL: ""          # Claude API proxy; empty = assistant off, worked examples only
     volumes:
       # Built by the tabush.ingest modules (see web/README.md); never committed.
       - ./data/tiles:/usr/share/nginx/html/tiles:ro
+      - ./data/open:/usr/share/nginx/html/open:ro
 
   web-dev:
     profiles: ["dev"]
@@ -32,3 +35,7 @@ services:
       - ./web:/app
       - /app/node_modules
       - ./data/tiles:/data/tiles:ro   # served at /tiles by vite.config.ts
+      - ./data/open:/data/open:ro     # served at /open by vite.config.ts
+    env_file:
+      - path: .env                    # ANTHROPIC_API_KEY for the /llm proxy
+        required: false

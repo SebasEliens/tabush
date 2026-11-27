@@ -20,7 +20,10 @@ src/tabush/
   geo/      CRS conventions, geometry checks, H3 indexing
   graph/    TypeDB loading and queries
   risk/     compliance checks, risk scores, parametric indices
-schema/     TypeDB schema (the ontology)
+  semantic/ compiles the semantic layer and publishes the open data files
+semantic/   taxonomy (SKOS) and ontology (OWL) in Turtle, golden questions
+features/   behaviour specs (Gherkin), run as Playwright tests
+schema/     TypeDB schema (earlier graph plan; see docs/research/talk-to-the-data.md)
 notebooks/  exploration (outputs stripped on commit)
 tests/
 docs/research/  design and market research

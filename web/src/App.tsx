@@ -1,5 +1,6 @@
+import { lazy, Suspense } from "react";
 import { NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { Bell, Map as MapIcon, Palette, PieChart } from "lucide-react";
+import { Bell, Map as MapIcon, MessageSquareText, Palette, PieChart } from "lucide-react";
 import { AlertsPage } from "./pages/AlertsPage";
 import { DesignPage } from "./pages/DesignPage";
 import { PortfolioPage } from "./pages/PortfolioPage";
@@ -9,9 +10,14 @@ import { useTenant } from "./tenant";
 import { Badge, ButtonLink, Select } from "./ui";
 import { Logo } from "./ui/Logo";
 
+// DuckDB-WASM and the Claude SDK only load when someone opens "Ask the data".
+const AskPage = lazy(() => import("./pages/AskPage").then((m) => ({ default: m.AskPage })));
+
 export function App() {
   const { tenants, tenant, setTenantId } = useTenant();
-  const isReport = useLocation().pathname.startsWith("/report");
+  const { pathname } = useLocation();
+  const isReport = pathname.startsWith("/report");
+  const isOpenData = pathname.startsWith("/ask"); // real open data, no mock records
   return (
     <div className="app">
       <a className="skip-link" href="#main">Skip to content</a>
@@ -22,9 +28,10 @@ export function App() {
             <NavLink to="/" end><MapIcon size={16} aria-hidden />Map</NavLink>
             <NavLink to="/portfolio"><PieChart size={16} aria-hidden />Portfolio</NavLink>
             <NavLink to="/alerts"><Bell size={16} aria-hidden />Alerts</NavLink>
+            <NavLink to="/ask"><MessageSquareText size={16} aria-hidden />Ask the data</NavLink>
           </nav>
           <div className="topbar__spacer" />
-          <Badge tone="mock">Mock data</Badge>
+          {!isOpenData && <Badge tone="mock">Mock data</Badge>}
           <label className="topbar__tenant">
             Institution
             <Select value={tenant?.id ?? ""} onChange={(e) => setTenantId(e.target.value)}>
@@ -39,6 +46,7 @@ export function App() {
           <Route path="/" element={<PropertiesPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/alerts" element={<AlertsPage />} />
+          <Route path="/ask" element={<Suspense fallback={null}><AskPage /></Suspense>} />
           <Route path="/report/:carCode" element={<ReportPage />} />
           <Route path="/design" element={<DesignPage />} />
         </Routes>

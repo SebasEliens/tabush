@@ -41,6 +41,36 @@ The app reads `<layer>.pmtiles` and its provenance file `<layer>.json` from
 Brazil region. A layer whose tiles are missing says so in the legend, and the
 rest of the app works as before.
 
+## Ask the data
+
+`/ask` answers questions about the open land tenure data in plain Portuguese or English.
+DuckDB-WASM queries the published files in the browser; Claude writes the SQL, guided by
+the taxonomy and ontology in `semantic/`, and the page shows every query, its result and
+the sources. Design: [docs/research/talk-to-the-data.md](../docs/research/talk-to-the-data.md).
+
+```sh
+uv run python -m tabush.ingest.municipalities --municipio 4304507 --municipio 1507300
+uv run python -m tabush.semantic.publish     # after the land tenure ingests above
+echo "ANTHROPIC_API_KEY=..." >> ../.env       # optional; without it only worked examples run
+npm run dev
+```
+
+The Vite dev and preview servers proxy `/llm` to the Claude API and add the key, so it
+never reaches the browser. The nginx image has no proxy yet: point `TABUSH_LLM_URL` at an
+LLM gateway, or leave it empty for worked examples only. Open data is read from
+`TABUSH_OPEN_DATA_URL` (default `/open`, served from `data/open/`).
+
+### Tests
+
+The behaviour is specified in [`../features/`](../features/) and run with
+[playwright-bdd](https://vitalets.github.io/playwright-bdd/):
+
+```sh
+npm run e2e:data   # synthetic fixture in data/e2e/open (no network)
+npm run e2e        # scenarios with a stubbed assistant; screenshots in e2e/screenshots/
+npm run e2e:llm    # @llm golden questions against the real model (needs ANTHROPIC_API_KEY)
+```
+
 ## Design notes
 
 - **Vendor agnostic.** The image is a plain static bundle on nginx (non-root,
