@@ -55,4 +55,3 @@ Each item maps to one atomic commit. Move items to `CHANGELOG.md` when done.
 - [ ] OWL/SHACL mapping of the TypeDB schema for RDF export (GeoSPARQL, FIBO)
 - [ ] C2 drought risk score: SPI/SPEI from CHIRPS/ERA5, NDVI anomaly
 - [ ] C3 parametric index backtest
-- [ ] Reuse archived Sentinel-2/canopy-height work for land monitoring around properties

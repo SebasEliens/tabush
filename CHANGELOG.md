@@ -30,7 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `TODO.md` for the phase-0 pilot
 
 ### Removed
-- Genipabu demo scope and TODO, moved to `archive/genipabu-demo/` (original state tagged `v0.1-genipabu`)
+- Genipabu demo scope and TODO, moved to `archive/genipabu-demo/`
+- `archive/genipabu-demo/` proof of concept and its pre-commit and ruff excludes (last present in commit `aa59efa`)
 
 ## [0.1.0] - 2026-09-12
 
