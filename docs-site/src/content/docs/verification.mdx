@@ -1,0 +1,25 @@
+---
+title: Specs and evidence
+description: Gherkin feature files rendered as specs, and the checks that verify them.
+---
+
+import FeatureSpecs from "../../components/FeatureSpecs.astro";
+
+Each feature file in [`features/`](https://github.com/SebasEliens/tabush/tree/main/features)
+is written before the code and describes behaviour in the words of the user
+it serves. The same files drive the tests (pytest-bdd for the pipeline,
+Playwright for the app), so what you read here is what CI checks.
+
+## Features
+
+<FeatureSpecs />
+
+## Checks on every change
+
+| Check | Command | Runs in |
+|---|---|---|
+| Python tests | `uv run pytest` | Pre-push, CI |
+| Lint and format | `uv run ruff check .` | Pre-commit, CI |
+| Web type check and build | `cd web && npm run build` | CI |
+| Colour contrast (WCAG AA) | `cd web && npm run check:contrast` | Local |
+| Docs site smoke test | `cd docs-site && npm run screenshots` | Docs deploy |

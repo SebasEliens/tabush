@@ -1,0 +1,67 @@
+---
+title: "0001: Build the living docs with Astro Starlight"
+description: A static, interactive docs site on GitHub Pages, built with Astro Starlight.
+sidebar: { order: 1 }
+---
+
+import AdrMeta from "../../../components/AdrMeta.astro";
+import DecisionMatrix from "../../../components/DecisionMatrix.tsx";
+
+<AdrMeta status="accepted" date="2026-11-27" />
+
+## Context
+
+We want living docs on GitHub Pages: static, but interactive enough to hold
+clickable mocks, interactive designs and illustrated decisions. The research
+notes in `docs/` must keep reading well on GitHub. The app is React with its
+own design tokens, and the team is Python-first. Everything should be open
+source and cheap to run.
+
+## Options
+
+Move the weights to test the choice against your own priorities. Scores are
+a first pass from reading each tool's docs, for discussion.
+
+<DecisionMatrix
+  client:visible
+  chosen="starlight"
+  criteria={[
+    { id: "interactive", label: "Interactive components in pages", weight: 5, hint: "Embed widgets in Markdown (MDX islands)" },
+    { id: "reuse", label: "Reuse the app's React and tokens", weight: 4 },
+    { id: "maintained", label: "Actively maintained", weight: 4 },
+    { id: "markdown", label: "Use docs/*.md as they are", weight: 3 },
+    { id: "simple", label: "Simple build and Pages deploy", weight: 3 },
+    { id: "light", label: "Light pages (little JavaScript)", weight: 2 },
+    { id: "python", label: "Familiar to a Python team", weight: 2 },
+  ]}
+  options={[
+    { id: "starlight", label: "Astro Starlight", scores: { interactive: 5, reuse: 5, maintained: 4, markdown: 4, simple: 4, light: 5, python: 2 }, note: "Static HTML by default; React only where a page asks for it." },
+    { id: "docusaurus", label: "Docusaurus", scores: { interactive: 5, reuse: 5, maintained: 4, markdown: 4, simple: 3, light: 2, python: 2 }, note: "Every page is a React app." },
+    { id: "vitepress", label: "VitePress", scores: { interactive: 4, reuse: 2, maintained: 4, markdown: 4, simple: 4, light: 3, python: 2 }, note: "Vue components, so no reuse of web/src/ui." },
+    { id: "mkdocs", label: "Material for MkDocs", scores: { interactive: 2, reuse: 1, maintained: 2, markdown: 5, simple: 5, light: 5, python: 5 }, note: "Its maintainers moved new work to Zensical; widgets need hand-wired JavaScript." },
+    { id: "html", label: "Hand-written HTML", scores: { interactive: 4, reuse: 3, maintained: 5, markdown: 1, simple: 3, light: 5, python: 3 }, note: "No dependencies, but no search, navigation or Markdown." },
+  ]}
+/>
+
+## Decision
+
+Use **Astro Starlight** in `docs-site/`, deployed to GitHub Pages by a GitHub
+Actions workflow on every push to `main`.
+
+- `docs/` stays the source of truth for written notes. A sync script adds
+  the frontmatter Starlight needs and rewrites links at build time.
+- Interactive pages are `.mdx` files that embed React components, hydrated
+  only when visible.
+- The theme imports `web/src/design/tokens.css`, so the docs use the app's
+  colours and fonts.
+- The web mock is built with its in-browser mock API and served at `/app/`
+  on the same site, so pages can embed it.
+
+## Consequences
+
+- Good: one place for research, mocks, decisions and test evidence, with
+  full-text search (Pagefind) and no server.
+- Good: a decision illustration is a small React component, so it can grow
+  into a real prototype.
+- Bad: a second Node project to keep up to date next to `web/`.
+- Revisit if the docs need versioning per release or if Starlight stalls.

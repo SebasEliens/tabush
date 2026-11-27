@@ -1,0 +1,38 @@
+---
+title: Decision records
+description: Architecture decisions, why we made them and what would change our mind.
+sidebar: { label: Overview, order: 0 }
+---
+
+A decision record captures a choice that is costly to reverse: the context,
+the options, what we chose and why, and what would make us revisit it. The
+format follows [MADR](https://adr.github.io/madr/). Where it helps, a record
+includes an interactive illustration, so a reader can test the decision
+against their own priorities instead of taking it on trust.
+
+| # | Decision | Status |
+|---|---|---|
+| [0001](0001-docs-site-starlight/) | Build the living docs with Astro Starlight | Accepted |
+| [0002](0002-h3-resolution/) | Use H3 resolution 9 as the parcel join key | Accepted |
+| [0003](0003-knowledge-graph-store/) | TypeDB 3.x for the knowledge graph, Neo4j as fallback | Proposed |
+
+## Template
+
+```mdx
+---
+title: "NNNN: Short decision in plain words"
+description: One sentence on what was decided.
+---
+
+import AdrMeta from "../../../components/AdrMeta.astro";
+
+<AdrMeta status="proposed" date="YYYY-MM-DD" />
+
+## Context
+Who has the problem, what decision it supports, what constrains it.
+
+## Options
+## Decision
+## Consequences
+Good, bad, and what would make us revisit this.
+```

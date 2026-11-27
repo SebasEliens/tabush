@@ -1,0 +1,28 @@
+---
+title: Mocks
+description: The clickable credit-officer app on fake data, and the screenshot history of each UI slice.
+tableOfContents: false
+---
+
+import LiveMock from "../../components/LiveMock.astro";
+import ScreenshotGallery from "../../components/ScreenshotGallery.astro";
+
+The mock in `web/` is the credit-officer app with an in-browser mock API: a
+map of rural properties around Canguçu (RS) with climate risk and compliance
+colouring, a property panel, a portfolio dashboard, alerts and a printable
+report. It is rebuilt from `main` with this site, so it always shows the
+current design.
+
+<LiveMock />
+
+:::note
+The real public data layers (CAR, indigenous lands, protected areas) come
+from tiles built by the Python ingest and are not published here yet, so the
+"Land tenure" legend says they are missing. The screenshots below show them.
+:::
+
+## Screenshot history
+
+Visual proof from each UI pull request, from `docs/screenshots/`.
+
+<ScreenshotGallery />

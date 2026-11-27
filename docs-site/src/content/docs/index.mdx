@@ -1,0 +1,44 @@
+---
+title: Tabush living docs
+description: Research, mocks, decisions and verification evidence for Tabush, a climate-risk platform for Brazilian family farmers.
+template: splash
+hero:
+  tagline: A rural property knowledge graph for fairer credit and insurance for climate-exposed family farmers in Brazil. This site is the project's living memory, rebuilt on every merge to main.
+  actions:
+    - text: Try the clickable mock
+      link: mocks/
+      icon: right-arrow
+    - text: Browse decisions
+      link: decisions/
+      variant: secondary
+---
+
+import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+<CardGrid>
+  <Card title="Mocks" icon="laptop">
+    The credit-officer app running on fake data, embedded live, plus the
+    screenshot history from every UI pull request.
+  </Card>
+  <Card title="Decisions" icon="approve-check">
+    Architecture decision records with interactive illustrations: move the
+    weights, change the H3 resolution, and see whether the choice still holds.
+  </Card>
+  <Card title="Specs and evidence" icon="list-format">
+    Gherkin feature files from `features/` rendered as readable specs, next
+    to the screenshots that prove them.
+  </Card>
+  <Card title="Research" icon="open-book">
+    Problem framing, technical requirements and source reviews, synced from
+    `docs/research/`.
+  </Card>
+</CardGrid>
+
+## What Tabush does
+
+- **C1 compliance checks** per property or borrower (CAR, land titles, territories, embargoes).
+- **C2 climate risk scores** for drought, flood and heat, per property and portfolio.
+- **C3 parametric insurance indices** with backtests and automatic payout events.
+
+<LinkCard title="Technical requirements" href="research/technical-requirements/" description="The stack, data sources and phase-0 plan." />
+<LinkCard title="How we work" href="how-we-work/" description="Specify, implement, validate: every change ships with evidence." />

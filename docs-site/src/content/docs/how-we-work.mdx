@@ -1,0 +1,41 @@
+---
+title: How we work
+description: Specify, implement and validate, with evidence for every change.
+---
+
+Inspired by pstack's verification-first loop for coding agents: a change is not done when the code is written, but
+when there is evidence that it does what the spec says. This site is where
+that evidence lives.
+
+## The loop
+
+| Step | Artifact | Where it shows up here |
+|---|---|---|
+| **Decide** | A decision record for any choice that is costly to reverse | [Decisions](../decisions/) |
+| **Specify** | A Gherkin feature file in `features/`, written before the code | [Specs and evidence](../verification/) |
+| **Implement** | One atomic commit per logical step | The pull request |
+| **Validate** | `uv run pytest`, `ruff`, type checks, Playwright end-to-end runs | CI on the pull request |
+| **Show** | Screenshots or a GIF of the change in the real app | PR description, then [Mocks](../mocks/) |
+
+## Adding to the docs
+
+- **Research or design notes:** write Markdown in `docs/`. It reads well on
+  GitHub and is synced into this site on build.
+- **Interactive pages:** add `.mdx` under `docs-site/src/content/docs/`. React
+  components from `docs-site/src/components/` (and from `web/src/ui` when
+  useful) can be embedded and hydrate in the browser.
+- **Decision records:** copy the [template](../decisions/#template) to
+  `docs-site/src/content/docs/decisions/NNNN-short-title.mdx`.
+- **Screenshots:** commit them under `docs/screenshots/<slice>/`; they appear
+  in the gallery automatically.
+
+## Run it locally
+
+```sh
+cd docs-site
+npm install
+npm run dev               # http://localhost:4321/tabush/
+npm run build:app         # optional: build the web mock into dist/app
+npm run build && npm run preview
+npm run screenshots       # Playwright check of key pages, writes screenshots/
+```
