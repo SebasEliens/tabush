@@ -37,6 +37,18 @@ Each item maps to one atomic commit. Move items to `CHANGELOG.md` when done.
 - [ ] Report output (HTML/PDF) with map and source citations for each flag
 - [ ] Hand-label a sample to measure property-to-record link precision (target ≥95%)
 
+## Milestone 2b — Open data and talk to the data
+
+- [x] Semantic layer: SKOS taxonomy and OWL ontology bound to the published tables (`semantic/`)
+- [x] Publish open data as GeoParquet 2.0 plus `nodes`/`edges`/`concepts` tables (`tabush.semantic.publish`)
+- [x] "Ask the data" page: Claude writes DuckDB-WASM SQL guided by the semantic layer
+- [x] Feature files + golden questions + Playwright screenshots in CI
+- [ ] LLM gateway for production (Brazil region), with a PROV-O audit log of each tool call
+- [ ] Publish `data/open/` on object storage + CDN with attribution per source
+- [ ] AlphaEarth embeddings per parcel: `similar_parcels` tool and land-use gap filling
+- [ ] Company ownership chains from public CNPJ/QSA data (`tabush:Party`, `holdsRight`)
+- [ ] Export the semantic model as WrenAI MDL if the assistant moves server-side
+
 ## Backlog
 
 - [ ] Dagster orchestration once more than two sources are ingested
