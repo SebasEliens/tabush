@@ -1,0 +1,152 @@
+# Tabush ontology: the kinds of things in the open data and how they relate.
+#
+# Classes and relations reuse standard terms where they exist: GeoSPARQL for features and
+# spatial relations, PROV-O for provenance, SKOS for the coded values (see taxonomy.ttl).
+# Land rights follow the Land Administration Domain Model (LADM, ISO 19152): a party holds
+# a right, restriction or responsibility (RRR) over a basic administrative unit made of
+# spatial units. LADM has no official OWL namespace, so the matches are given in comments.
+#
+# The tabush:table, tabush:column, tabush:predicate and tabush:codedBy annotations bind each
+# term to the Parquet files in data/open/, which is what turns this ontology into a semantic
+# layer: the talk-to-the-data assistant reads the compiled model (semantic_model.json) and
+# writes SQL against those bindings instead of guessing column names.
+#
+# Every edge row carries source, snapshot_date and confidence (prov:wasDerivedFrom).
+
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix geo:     <http://www.opengis.net/ont/geosparql#> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix agrovoc: <http://aims.fao.org/aos/agrovoc/> .
+@prefix tabush:  <https://tabush.org/ontology#> .
+@prefix tx:      <https://tabush.org/taxonomy/> .
+
+<https://tabush.org/ontology> a owl:Ontology ;
+  rdfs:label "Tabush land tenure ontology"@en ;
+  owl:versionInfo "0.1" ;
+  rdfs:comment "Rural properties, public territories, municipalities and their overlaps, as published in data/open/."@en .
+
+# ---------------------------------------------------------------- binding vocabulary
+tabush:table a owl:AnnotationProperty ; rdfs:comment "Parquet table (file stem in data/open/) holding the instances of a class."@en .
+tabush:idColumn a owl:AnnotationProperty ; rdfs:comment "Column with the source's own identifier."@en .
+tabush:labelColumn a owl:AnnotationProperty ; rdfs:comment "Column to show as a human-readable name."@en .
+tabush:column a owl:AnnotationProperty ; rdfs:comment "Column holding a datatype property, as table.column."@en .
+tabush:predicate a owl:AnnotationProperty ; rdfs:comment "Value of edges.predicate for an object property."@en .
+tabush:codedBy a owl:AnnotationProperty ; rdfs:comment "SKOS concept scheme whose notations are the column's values."@en .
+tabush:codes a owl:AnnotationProperty ; rdfs:comment "Column whose values are the notations of this scheme, as table.column."@en .
+tabush:unit a owl:AnnotationProperty .
+tabush:requiresPublicLand a owl:DatatypeProperty ; rdfs:range xsd:boolean ;
+  rdfs:comment "True for protected area categories whose land must be in public ownership (SNUC)."@en .
+tabush:status a owl:AnnotationProperty ; rdfs:comment "planned = defined but no data yet."@en .
+
+# ---------------------------------------------------------------- classes
+tabush:RuralProperty a owl:Class ;
+  rdfs:subClassOf geo:Feature ;
+  rdfs:label "Rural property"@en, "Imóvel rural"@pt ;
+  rdfs:comment "A record in the Rural Environmental Registry (CAR): a self-declared boundary with its registration type, status and size. LADM: a spatial unit of a basic administrative unit. CAR publishes no owner names or CPF."@en ;
+  skos:closeMatch agrovoc:c_28718 ;  # land ownership
+  tabush:table "rural_properties" ; tabush:idColumn "source_id" ; tabush:labelColumn "source_id" .
+
+tabush:Territory a owl:Class ;
+  rdfs:subClassOf geo:Feature ;
+  rdfs:label "Public territory"@en, "Território público"@pt ;
+  rdfs:comment "Land under a public regime: indigenous lands, protected areas, and later quilombola territories, settlements and public forests. LADM: a basic administrative unit carrying a public right or restriction."@en .
+
+tabush:IndigenousLand a owl:Class ;
+  rdfs:subClassOf tabush:Territory ;
+  rdfs:label "Indigenous land"@en, "Terra indígena"@pt ;
+  skos:exactMatch tx:indigenous-land ;
+  tabush:table "indigenous_lands" ; tabush:idColumn "source_id" ; tabush:labelColumn "name" .
+
+tabush:ProtectedArea a owl:Class ;
+  rdfs:subClassOf tabush:Territory ;
+  rdfs:label "Protected area"@en, "Unidade de conservação"@pt ;
+  skos:exactMatch tx:protected-area ;
+  tabush:table "protected_areas" ; tabush:idColumn "source_id" ; tabush:labelColumn "name" .
+
+tabush:Municipality a owl:Class ;
+  rdfs:subClassOf geo:Feature ;
+  rdfs:label "Municipality"@en, "Município"@pt ;
+  rdfs:comment "An IBGE municipality, with its 2022 Census population."@en ;
+  tabush:table "municipalities" ; tabush:idColumn "source_id" ; tabush:labelColumn "name" .
+
+tabush:Party a owl:Class ;
+  rdfs:subClassOf prov:Agent ;
+  rdfs:label "Party"@en, "Parte"@pt ;
+  rdfs:comment "A person, family, company or community that holds rights to land (LADM LA_Party). Planned: public CAR data has no owners, so parties only come from partner data given with consent, with CPF hashed (LGPD)."@en ;
+  tabush:status "planned" .
+
+# ---------------------------------------------------------------- relations (rows in edges)
+tabush:overlaps a owl:ObjectProperty ;
+  rdfs:subPropertyOf geo:sfOverlaps ;
+  rdfs:label "overlaps"@en, "sobrepõe"@pt ;
+  rdfs:domain tabush:RuralProperty ;
+  rdfs:range [ owl:unionOf ( tabush:RuralProperty tabush:IndigenousLand tabush:ProtectedArea ) ] ;
+  rdfs:comment "Part of a private rural property lies inside another CAR property, an indigenous land, or a protected area whose land must be public. overlap_ha is the shared area; overlap_pct is that area as a share of the subject property. Only shares of 1% and more are kept."@en ;
+  tabush:predicate "overlaps" .
+
+tabush:locatedIn a owl:ObjectProperty ;
+  rdfs:subPropertyOf geo:sfWithin ;
+  rdfs:label "registered in"@en, "registrado em"@pt ;
+  rdfs:domain tabush:RuralProperty ; rdfs:range tabush:Municipality ;
+  rdfs:comment "The municipality a CAR record is registered in."@en ;
+  tabush:predicate "located_in" .
+
+tabush:intersects a owl:ObjectProperty ;
+  rdfs:subPropertyOf geo:sfIntersects ;
+  rdfs:label "intersects"@en, "intersecta"@pt ;
+  rdfs:domain tabush:Territory ; rdfs:range tabush:Municipality ;
+  rdfs:comment "A territory lies partly in a municipality. overlap_ha is the area inside the municipality."@en ;
+  tabush:predicate "intersects" .
+
+tabush:holdsRight a owl:ObjectProperty ;
+  rdfs:label "holds a right to"@en, "detém direito sobre"@pt ;
+  rdfs:domain tabush:Party ; rdfs:range tabush:RuralProperty ;
+  rdfs:comment "LADM LA_RRR: ownership, possession, lease or use right. Planned, see tabush:Party."@en ;
+  tabush:predicate "holds_right" ; tabush:status "planned" .
+
+# ---------------------------------------------------------------- attributes (columns)
+tabush:tenureRegime a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "registration type"@en ; tabush:column "rural_properties.property_type" ; tabush:codedBy tx:tenure-regime .
+tabush:carStatus a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "CAR status"@en ; tabush:column "rural_properties.status" ; tabush:codedBy tx:car-status .
+tabush:reviewStage a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "review stage"@en ; rdfs:comment "Free text from SICAR on the state's review of the record."@en ;
+  tabush:column "rural_properties.condition" .
+tabush:sizeClass a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "legal size class"@en ; tabush:column "rural_properties.size_class" ; tabush:codedBy tx:property-size .
+tabush:fiscalModules a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "fiscal modules"@en ; rdfs:comment "Declared size in fiscal modules, the municipality's legal unit of farm size."@en ;
+  tabush:column "rural_properties.fiscal_modules" .
+tabush:tenureFlag a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "land tenure flag"@en ; tabush:column "rural_properties.tenure_flag" ; tabush:codedBy tx:tenure-flag .
+tabush:carOverlapPct a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "share claimed by other CAR records"@en ; tabush:unit "%" ; tabush:column "rural_properties.car_overlap_pct" .
+tabush:indigenousOverlapPct a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "share inside indigenous lands"@en ; tabush:unit "%" ; tabush:column "rural_properties.indigenous_overlap_pct" .
+tabush:protectedOverlapPct a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "share inside public protected areas"@en ; tabush:unit "%" ; tabush:column "rural_properties.protected_overlap_pct" .
+tabush:registeredOn a owl:DatatypeProperty ; rdfs:domain tabush:RuralProperty ;
+  rdfs:label "registered on"@en ; tabush:column "rural_properties.registered_on" .
+tabush:demarcationPhase a owl:DatatypeProperty ; rdfs:domain tabush:IndigenousLand ;
+  rdfs:label "demarcation phase"@en ; tabush:column "indigenous_lands.phase" ; tabush:codedBy tx:demarcation-phase .
+tabush:protectedAreaCategory a owl:DatatypeProperty ; rdfs:domain tabush:ProtectedArea ;
+  rdfs:label "SNUC category"@en ; tabush:column "protected_areas.category" ; tabush:codedBy tx:protected-area-category .
+tabush:publicDomain a owl:DatatypeProperty ; rdfs:domain tabush:ProtectedArea ;
+  rdfs:label "land must be public"@en ; tabush:column "protected_areas.public_domain" .
+tabush:sphere a owl:DatatypeProperty ; rdfs:domain tabush:ProtectedArea ;
+  rdfs:label "government sphere"@en ; tabush:column "protected_areas.sphere" ; tabush:codedBy tx:government-sphere .
+tabush:population a owl:DatatypeProperty ; rdfs:domain tabush:Municipality ;
+  rdfs:label "resident population (Census 2022)"@en ; skos:closeMatch agrovoc:c_330887 ;
+  tabush:unit "people" ; tabush:column "municipalities.population" .
+tabush:indigenousPopulation a owl:DatatypeProperty ; rdfs:domain tabush:Municipality ;
+  rdfs:label "indigenous people (Census 2022)"@en ; tabush:unit "people" ; tabush:column "municipalities.indigenous_population" .
+tabush:indigenousPopulationInTi a owl:DatatypeProperty ; rdfs:domain tabush:Municipality ;
+  rdfs:label "indigenous people living in indigenous lands (Census 2022)"@en ; tabush:unit "people" ;
+  tabush:column "municipalities.indigenous_population_in_ti" .
+tabush:areaHa a owl:DatatypeProperty ; rdfs:domain geo:Feature ;
+  rdfs:label "area"@en ; rdfs:comment "Measured from the geometry in SIRGAS 2000 / Brazil Polyconic (EPSG:5880)."@en ;
+  tabush:unit "ha" ; tabush:column "*.area_ha" .

@@ -1,0 +1,286 @@
+# Tabush taxonomy: the controlled vocabularies behind every coded column.
+#
+# One SKOS concept scheme per vocabulary. skos:notation is the exact value stored in the
+# data, so a word in a question ("pending", "homologada", "family farm") resolves to a
+# filter on a column. Labels are given in English and Portuguese, with the synonyms people
+# actually use as skos:altLabel. Where AGROVOC (FAO) has the concept, skos:exactMatch or
+# skos:closeMatch links to it; the AGROVOC ids were checked against agrovoc.fao.org.
+#
+# tabush:codes says which table column a scheme codes. Compile with
+#   uv run python -m tabush.semantic.publish
+
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix agrovoc: <http://aims.fao.org/aos/agrovoc/> .
+@prefix tabush:  <https://tabush.org/ontology#> .
+@prefix tx:      <https://tabush.org/taxonomy/> .
+
+# ---------------------------------------------------------------- tenure regime
+tx:tenure-regime a skos:ConceptScheme ;
+  skos:prefLabel "Tenure regime"@en, "Regime fundiário"@pt ;
+  skos:definition "Who holds the land and under which legal regime. The first three are CAR registration types; the others are public territories."@en ;
+  skos:closeMatch agrovoc:c_12069 ;  # land tenure
+  tabush:codes "rural_properties.property_type" .
+
+tx:private-rural-property a skos:Concept ; skos:inScheme tx:tenure-regime ; skos:topConceptOf tx:tenure-regime ;
+  skos:notation "IRU" ;
+  skos:prefLabel "Private rural property"@en, "Imóvel rural"@pt ;
+  skos:altLabel "farm"@en, "private property"@en, "IRU"@pt, "propriedade rural"@pt, "fazenda"@pt ;
+  skos:definition "A rural property held privately and registered in CAR by its owner or occupant (Lei 12.651/2012)."@en ;
+  skos:closeMatch agrovoc:c_9000082 .  # private property
+
+tx:agrarian-reform-settlement a skos:Concept ; skos:inScheme tx:tenure-regime ; skos:topConceptOf tx:tenure-regime ;
+  skos:notation "AST" ;
+  skos:prefLabel "Agrarian reform settlement"@en, "Assentamento da reforma agrária"@pt ;
+  skos:altLabel "settlement"@en, "assentamento"@pt, "AST"@pt, "PA"@pt ;
+  skos:definition "A settlement created by INCRA for agrarian reform; the CAR record covers the whole perimeter, which holds the families' lots."@en ;
+  skos:closeMatch agrovoc:c_196 .  # agrarian reform
+
+tx:traditional-community-territory a skos:Concept ; skos:inScheme tx:tenure-regime ; skos:topConceptOf tx:tenure-regime ;
+  skos:notation "PCT" ;
+  skos:prefLabel "Traditional peoples and communities territory"@en, "Território de povos e comunidades tradicionais"@pt ;
+  skos:altLabel "traditional community"@en, "PCT"@pt, "comunidade tradicional"@pt ;
+  skos:definition "Land used collectively by a traditional people or community (Decreto 6.040/2007), registered in CAR as one record."@en .
+
+tx:indigenous-land a skos:Concept ; skos:inScheme tx:tenure-regime ; skos:topConceptOf tx:tenure-regime ;
+  skos:prefLabel "Indigenous land"@en, "Terra indígena"@pt ;
+  skos:altLabel "TI"@pt, "terra indígena"@pt, "indigenous territory"@en, "reserve"@en ;
+  skos:definition "Land traditionally occupied by indigenous peoples. It belongs to the Union, with exclusive use by the people (Constituição art. 231). FUNAI sets the limits."@en ;
+  skos:exactMatch agrovoc:c_86524ff8 .  # Indigenous Peoples' lands
+
+tx:protected-area a skos:Concept ; skos:inScheme tx:tenure-regime ; skos:topConceptOf tx:tenure-regime ;
+  skos:prefLabel "Protected area"@en, "Unidade de conservação"@pt ;
+  skos:altLabel "UC"@pt, "conservation unit"@en, "nature reserve"@en ;
+  skos:definition "A conservation unit under the SNUC law (Lei 9.985/2000). Whether private land is allowed depends on its category."@en ;
+  skos:exactMatch agrovoc:c_37952 .  # protected areas
+
+# ---------------------------------------------------------------- CAR record status
+tx:car-status a skos:ConceptScheme ;
+  skos:prefLabel "CAR record status"@en, "Situação do cadastro"@pt ;
+  skos:definition "Status of a record in the Rural Environmental Registry (SICAR)."@en ;
+  tabush:codes "rural_properties.status" .
+
+tx:car-active a skos:Concept ; skos:inScheme tx:car-status ; skos:topConceptOf tx:car-status ;
+  skos:notation "AT" ; skos:prefLabel "Active"@en, "Ativo"@pt ;
+  skos:altLabel "valid"@en, "ativo"@pt ;
+  skos:definition "The record is in force. Most active records have not yet been reviewed by the state agency."@en .
+tx:car-pending a skos:Concept ; skos:inScheme tx:car-status ; skos:topConceptOf tx:car-status ;
+  skos:notation "PE" ; skos:prefLabel "Pending"@en, "Pendente"@pt ;
+  skos:altLabel "pendente"@pt, "with issues"@en ;
+  skos:definition "The state agency found issues the declarant must fix."@en .
+tx:car-suspended a skos:Concept ; skos:inScheme tx:car-status ; skos:topConceptOf tx:car-status ;
+  skos:notation "SU" ; skos:prefLabel "Suspended"@en, "Suspenso"@pt ;
+  skos:altLabel "suspenso"@pt ;
+  skos:definition "The record is suspended, for example by court order or because of an overlap with public land."@en .
+tx:car-cancelled a skos:Concept ; skos:inScheme tx:car-status ; skos:topConceptOf tx:car-status ;
+  skos:notation "CA" ; skos:prefLabel "Cancelled"@en, "Cancelado"@pt ;
+  skos:altLabel "cancelado"@pt, "revoked"@en ;
+  skos:definition "The record was cancelled and no longer counts. Overlap flags ignore cancelled records."@en .
+
+# ---------------------------------------------------------------- property size
+tx:property-size a skos:ConceptScheme ;
+  skos:prefLabel "Legal property size"@en, "Classe de tamanho do imóvel"@pt ;
+  skos:definition "Size class of a private rural property in fiscal modules (Lei 8.629/1993, art. 4). Settlements and traditional territories get none."@en ;
+  tabush:codes "rural_properties.size_class" .
+
+tx:small-property a skos:Concept ; skos:inScheme tx:property-size ; skos:topConceptOf tx:property-size ;
+  skos:notation "small" ; skos:prefLabel "Small property"@en, "Pequena propriedade"@pt ;
+  skos:altLabel "family farm"@en, "smallholding"@en, "smallholder"@en, "agricultura familiar"@pt, "pequeno produtor"@pt ;
+  skos:definition "Up to 4 fiscal modules. This is also the size limit for family farming (Lei 11.326/2006, art. 3), so it is the usual proxy for a family farm."@en ;
+  skos:related agrovoc:c_1422957329186, agrovoc:c_14343 .  # family farming, smallholders
+tx:medium-property a skos:Concept ; skos:inScheme tx:property-size ; skos:topConceptOf tx:property-size ;
+  skos:notation "medium" ; skos:prefLabel "Medium property"@en, "Média propriedade"@pt ;
+  skos:definition "More than 4 and up to 15 fiscal modules."@en .
+tx:large-property a skos:Concept ; skos:inScheme tx:property-size ; skos:topConceptOf tx:property-size ;
+  skos:notation "large" ; skos:prefLabel "Large property"@en, "Grande propriedade"@pt ;
+  skos:altLabel "latifúndio"@pt, "large estate"@en ;
+  skos:definition "More than 15 fiscal modules."@en .
+
+# ---------------------------------------------------------------- tenure flag
+tx:tenure-flag a skos:ConceptScheme ;
+  skos:prefLabel "Land tenure flag"@en, "Alerta fundiário"@pt ;
+  skos:definition "The most serious overlap found for a private rural property, in this order: indigenous land, public protected area, another CAR property, none."@en ;
+  skos:related agrovoc:c_cc39a497 ;  # land grabbing
+  tabush:codes "rural_properties.tenure_flag" .
+
+tx:flag-indigenous-land a skos:Concept ; skos:inScheme tx:tenure-flag ; skos:topConceptOf tx:tenure-flag ;
+  skos:notation "indigenous_land" ; skos:prefLabel "Overlaps an indigenous land"@en, "Sobreposição com terra indígena"@pt ;
+  skos:altLabel "land grabbing"@en, "grilagem"@pt, "invasion"@en ;
+  skos:definition "At least 5% of the property lies inside an indigenous land."@en .
+tx:flag-public-protected-area a skos:Concept ; skos:inScheme tx:tenure-flag ; skos:topConceptOf tx:tenure-flag ;
+  skos:notation "public_protected_area" ; skos:prefLabel "Overlaps a public protected area"@en, "Sobreposição com UC de domínio público"@pt ;
+  skos:altLabel "grilagem"@pt ;
+  skos:definition "At least 5% of the property lies inside a protected area whose land must be public."@en .
+tx:flag-car-overlap a skos:Concept ; skos:inScheme tx:tenure-flag ; skos:topConceptOf tx:tenure-flag ;
+  skos:notation "car_overlap" ; skos:prefLabel "Overlaps another CAR property"@en, "Sobreposição entre imóveis do CAR"@pt ;
+  skos:altLabel "double claim"@en, "duplicate claim"@en, "sobreposição"@pt ;
+  skos:definition "At least 20% of the property is also claimed by another private CAR record."@en .
+tx:flag-none a skos:Concept ; skos:inScheme tx:tenure-flag ; skos:topConceptOf tx:tenure-flag ;
+  skos:notation "none" ; skos:prefLabel "No overlap found"@en, "Sem sobreposição"@pt ;
+  skos:altLabel "clean"@en ;
+  skos:definition "No overlap above the thresholds."@en .
+tx:flag-not-assessed a skos:Concept ; skos:inScheme tx:tenure-flag ; skos:topConceptOf tx:tenure-flag ;
+  skos:notation "not_assessed" ; skos:prefLabel "Not assessed"@en, "Não avaliado"@pt ;
+  skos:definition "Settlements, traditional territories and cancelled records, whose overlaps are expected or no longer matter."@en .
+
+# ---------------------------------------------------------------- demarcation phase
+tx:demarcation-phase a skos:ConceptScheme ;
+  skos:prefLabel "Demarcation phase"@en, "Fase do procedimento demarcatório"@pt ;
+  skos:definition "Stage of an indigenous land in FUNAI's demarcation procedure (Decreto 1.775/1996), from study to registration."@en ;
+  skos:related agrovoc:c_119678e7 ;  # land titling
+  tabush:codes "indigenous_lands.phase" .
+
+tx:phase-under-study a skos:Concept ; skos:inScheme tx:demarcation-phase ; skos:topConceptOf tx:demarcation-phase ;
+  skos:notation "Em estudo" ; skos:prefLabel "Under study"@en, "Em estudo"@pt ;
+  skos:definition "FUNAI is studying the area. Not in the IBGE copy of the limits."@en .
+tx:phase-delimited a skos:Concept ; skos:inScheme tx:demarcation-phase ; skos:topConceptOf tx:demarcation-phase ;
+  skos:notation "Delimitada" ; skos:prefLabel "Delimited"@en, "Delimitada"@pt ;
+  skos:definition "FUNAI has published the study and the proposed limits."@en .
+tx:phase-declared a skos:Concept ; skos:inScheme tx:demarcation-phase ; skos:topConceptOf tx:demarcation-phase ;
+  skos:notation "Declarada" ; skos:prefLabel "Declared"@en, "Declarada"@pt ;
+  skos:definition "The Minister of Justice has declared the limits; physical demarcation can start."@en .
+tx:phase-homologated a skos:Concept ; skos:inScheme tx:demarcation-phase ; skos:topConceptOf tx:demarcation-phase ;
+  skos:notation "Homologada" ; skos:prefLabel "Homologated"@en, "Homologada"@pt ;
+  skos:altLabel "ratified"@en, "approved"@en ;
+  skos:definition "The President has ratified the demarcation by decree."@en .
+tx:phase-sent-to-registry a skos:Concept ; skos:inScheme tx:demarcation-phase ; skos:topConceptOf tx:demarcation-phase ;
+  skos:notation "Encaminhada RI" ; skos:prefLabel "Sent to the land registry"@en, "Encaminhada para registro"@pt ;
+  skos:definition "Homologated and sent to be registered as Union land; registration is not yet complete."@en .
+tx:phase-regularised a skos:Concept ; skos:inScheme tx:demarcation-phase ; skos:topConceptOf tx:demarcation-phase ;
+  skos:notation "Regularizada" ; skos:prefLabel "Regularised"@en, "Regularizada"@pt ;
+  skos:altLabel "registered"@en, "fully demarcated"@en, "demarcated"@en ;
+  skos:definition "Registered in the land registry and with the Union's property office (SPU): the final stage."@en .
+
+# ---------------------------------------------------------------- protected area category
+tx:protected-area-category a skos:ConceptScheme ;
+  skos:prefLabel "Protected area category"@en, "Categoria de unidade de conservação"@pt ;
+  skos:definition "The twelve SNUC categories (Lei 9.985/2000), grouped into full protection and sustainable use. tabush:requiresPublicLand marks the categories whose land must be in public ownership."@en ;
+  tabush:codes "protected_areas.category" .
+
+tx:full-protection a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:topConceptOf tx:protected-area-category ;
+  skos:prefLabel "Full protection"@en, "Proteção integral"@pt ;
+  skos:definition "Only indirect use of natural resources is allowed (SNUC art. 7)."@en .
+tx:sustainable-use a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:topConceptOf tx:protected-area-category ;
+  skos:prefLabel "Sustainable use"@en, "Uso sustentável"@pt ;
+  skos:definition "Conservation combined with sustainable use of part of the resources (SNUC art. 7)."@en .
+
+tx:ecological-station a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:full-protection ;
+  skos:notation "Estação Ecológica" ; skos:prefLabel "Ecological station"@en, "Estação Ecológica"@pt ; skos:altLabel "ESEC"@pt ;
+  tabush:requiresPublicLand true ; skos:definition "SNUC art. 9."@en .
+tx:biological-reserve a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:full-protection ;
+  skos:notation "Reserva Biológica" ; skos:prefLabel "Biological reserve"@en, "Reserva Biológica"@pt ; skos:altLabel "REBIO"@pt ;
+  tabush:requiresPublicLand true ; skos:definition "SNUC art. 10."@en .
+tx:park a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:full-protection ;
+  skos:notation "Parque" ; skos:prefLabel "Park"@en, "Parque"@pt ; skos:altLabel "national park"@en, "state park"@en, "PARNA"@pt ;
+  tabush:requiresPublicLand true ; skos:closeMatch agrovoc:c_5079 ; skos:definition "National, state or municipal park. SNUC art. 11."@en .
+tx:natural-monument a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:full-protection ;
+  skos:notation "Monumento Natural" ; skos:prefLabel "Natural monument"@en, "Monumento Natural"@pt ; skos:altLabel "MONA"@pt ;
+  tabush:requiresPublicLand false ; skos:definition "Private land allowed if compatible. SNUC art. 12."@en .
+tx:wildlife-refuge a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:full-protection ;
+  skos:notation "Refúgio de Vida Silvestre" ; skos:prefLabel "Wildlife refuge"@en, "Refúgio de Vida Silvestre"@pt ; skos:altLabel "RVS"@pt ;
+  tabush:requiresPublicLand false ; skos:definition "Private land allowed if compatible. SNUC art. 13."@en .
+tx:environmental-protection-area a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:sustainable-use ;
+  skos:notation "Área de Proteção Ambiental" ; skos:prefLabel "Environmental protection area"@en, "Área de Proteção Ambiental"@pt ; skos:altLabel "APA"@pt ;
+  tabush:requiresPublicLand false ; skos:definition "Large areas of public or private land with rules on use. SNUC art. 15."@en .
+tx:relevant-ecological-interest-area a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:sustainable-use ;
+  skos:notation "Área de Relevante Interesse Ecológico" ; skos:prefLabel "Area of relevant ecological interest"@en, "Área de Relevante Interesse Ecológico"@pt ; skos:altLabel "ARIE"@pt ;
+  tabush:requiresPublicLand false ; skos:definition "SNUC art. 16."@en .
+tx:national-forest a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:sustainable-use ;
+  skos:notation "Floresta" ; skos:prefLabel "National or state forest"@en, "Floresta"@pt ; skos:altLabel "FLONA"@pt, "FLOTA"@pt ;
+  tabush:requiresPublicLand true ; skos:definition "SNUC art. 17."@en .
+tx:extractive-reserve a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:sustainable-use ;
+  skos:notation "Reserva Extrativista" ; skos:prefLabel "Extractive reserve"@en, "Reserva Extrativista"@pt ; skos:altLabel "RESEX"@pt ;
+  tabush:requiresPublicLand true ; skos:definition "Public land granted for use to traditional extractive populations. SNUC art. 18."@en .
+tx:fauna-reserve a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:sustainable-use ;
+  skos:notation "Reserva de Fauna" ; skos:prefLabel "Fauna reserve"@en, "Reserva de Fauna"@pt ; skos:altLabel "REFAU"@pt ;
+  tabush:requiresPublicLand true ; skos:definition "SNUC art. 19."@en .
+tx:sustainable-development-reserve a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:sustainable-use ;
+  skos:notation "Reserva de Desenvolvimento Sustentável" ; skos:prefLabel "Sustainable development reserve"@en, "Reserva de Desenvolvimento Sustentável"@pt ; skos:altLabel "RDS"@pt ;
+  tabush:requiresPublicLand true ; skos:definition "SNUC art. 20."@en .
+tx:private-natural-heritage-reserve a skos:Concept ; skos:inScheme tx:protected-area-category ; skos:broader tx:sustainable-use ;
+  skos:notation "Reserva Particular do Patrimônio Natural" ; skos:prefLabel "Private natural heritage reserve"@en, "Reserva Particular do Patrimônio Natural"@pt ; skos:altLabel "RPPN"@pt, "private reserve"@en ;
+  tabush:requiresPublicLand false ; skos:definition "Private land set aside in perpetuity by its owner. SNUC art. 21."@en .
+
+# ---------------------------------------------------------------- government sphere
+tx:government-sphere a skos:ConceptScheme ;
+  skos:prefLabel "Government sphere"@en, "Esfera administrativa"@pt ;
+  tabush:codes "protected_areas.sphere" .
+tx:federal a skos:Concept ; skos:inScheme tx:government-sphere ; skos:topConceptOf tx:government-sphere ;
+  skos:notation "Federal" ; skos:prefLabel "Federal"@en, "Federal"@pt ; skos:altLabel "ICMBio"@pt .
+tx:state a skos:Concept ; skos:inScheme tx:government-sphere ; skos:topConceptOf tx:government-sphere ;
+  skos:notation "Estadual" ; skos:prefLabel "State"@en, "Estadual"@pt .
+tx:municipal a skos:Concept ; skos:inScheme tx:government-sphere ; skos:topConceptOf tx:government-sphere ;
+  skos:notation "Municipal" ; skos:prefLabel "Municipal"@en, "Municipal"@pt .
+
+# ---------------------------------------------------------------- confidence
+tx:confidence a skos:ConceptScheme ;
+  skos:prefLabel "Confidence"@en, "Confiança"@pt ;
+  skos:definition "How sure we are that an overlap is a real conflict and not a drawing error, from the share of the property covered."@en ;
+  tabush:codes "edges.confidence" .
+tx:confidence-low a skos:Concept ; skos:inScheme tx:confidence ; skos:topConceptOf tx:confidence ;
+  skos:notation "low" ; skos:prefLabel "Low"@en, "Baixa"@pt ; skos:definition "Under 20% of the property."@en .
+tx:confidence-medium a skos:Concept ; skos:inScheme tx:confidence ; skos:topConceptOf tx:confidence ;
+  skos:notation "medium" ; skos:prefLabel "Medium"@en, "Média"@pt ; skos:definition "20% to under 50% of the property."@en .
+tx:confidence-high a skos:Concept ; skos:inScheme tx:confidence ; skos:topConceptOf tx:confidence ;
+  skos:notation "high" ; skos:prefLabel "High"@en, "Alta"@pt ; skos:definition "50% or more of the property."@en .
+
+# ---------------------------------------------------------------- land use and cover
+# The MapBiomas legend (Collection 10), so land use questions have defined classes before
+# the MapBiomas ingest lands. skos:notation is the MapBiomas pixel value. Not yet bound to
+# a table column.
+tx:land-use a skos:ConceptScheme ;
+  skos:prefLabel "Land use and land cover (MapBiomas)"@en, "Uso e cobertura da terra (MapBiomas)"@pt ;
+  skos:definition "Annual land use and land cover classes of MapBiomas Brasil, Collection 10 legend. Not yet ingested."@en ;
+  skos:closeMatch agrovoc:c_4182 ;  # land use
+  dcterms:source <https://brasil.mapbiomas.org/en/codigos-de-legenda/> .
+
+tx:lu-forest a skos:Concept ; skos:inScheme tx:land-use ; skos:topConceptOf tx:land-use ; skos:notation "1" ;
+  skos:prefLabel "Forest"@en, "Floresta"@pt ; skos:exactMatch agrovoc:c_3062 .
+tx:lu-forest-formation a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-forest ; skos:notation "3" ;
+  skos:prefLabel "Forest formation"@en, "Formação florestal"@pt ; skos:altLabel "rainforest"@en, "mata"@pt .
+tx:lu-savanna-formation a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-forest ; skos:notation "4" ;
+  skos:prefLabel "Savanna formation"@en, "Formação savânica"@pt ; skos:altLabel "cerrado"@pt .
+tx:lu-mangrove a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-forest ; skos:notation "5" ;
+  skos:prefLabel "Mangrove"@en, "Mangue"@pt ; skos:exactMatch agrovoc:c_16190 .
+tx:lu-floodable-forest a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-forest ; skos:notation "6" ;
+  skos:prefLabel "Floodable forest"@en, "Floresta alagável"@pt ; skos:altLabel "várzea"@pt, "igapó"@pt .
+tx:lu-non-forest-natural a skos:Concept ; skos:inScheme tx:land-use ; skos:topConceptOf tx:land-use ; skos:notation "10" ;
+  skos:prefLabel "Herbaceous and shrubby vegetation"@en, "Vegetação herbácea e arbustiva"@pt ; skos:altLabel "non-forest natural formation"@en .
+tx:lu-wetland a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-non-forest-natural ; skos:notation "11" ;
+  skos:prefLabel "Wetland"@en, "Campo alagado e área pantanosa"@pt ; skos:exactMatch agrovoc:c_8371 .
+tx:lu-grassland a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-non-forest-natural ; skos:notation "12" ;
+  skos:prefLabel "Grassland"@en, "Formação campestre"@pt ; skos:altLabel "campos"@pt, "pampa"@pt ; skos:exactMatch agrovoc:c_3366 .
+tx:lu-farming a skos:Concept ; skos:inScheme tx:land-use ; skos:topConceptOf tx:land-use ; skos:notation "14" ;
+  skos:prefLabel "Farming"@en, "Agropecuária"@pt ; skos:closeMatch agrovoc:c_2808 .
+tx:lu-pasture a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-farming ; skos:notation "15" ;
+  skos:prefLabel "Pasture"@en, "Pastagem"@pt ; skos:altLabel "cattle ranching"@en, "pasto"@pt ; skos:exactMatch agrovoc:c_5626 .
+tx:lu-agriculture a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-farming ; skos:notation "18" ;
+  skos:prefLabel "Agriculture"@en, "Agricultura"@pt ; skos:closeMatch agrovoc:c_1972 .
+tx:lu-temporary-crop a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-agriculture ; skos:notation "19" ;
+  skos:prefLabel "Temporary crop"@en, "Lavoura temporária"@pt .
+tx:lu-soybean a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-temporary-crop ; skos:notation "39" ;
+  skos:prefLabel "Soybean"@en, "Soja"@pt ; skos:exactMatch agrovoc:c_14477 .
+tx:lu-sugar-cane a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-temporary-crop ; skos:notation "20" ;
+  skos:prefLabel "Sugar cane"@en, "Cana"@pt .
+tx:lu-rice a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-temporary-crop ; skos:notation "40" ;
+  skos:prefLabel "Rice"@en, "Arroz"@pt .
+tx:lu-other-temporary-crops a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-temporary-crop ; skos:notation "41" ;
+  skos:prefLabel "Other temporary crops"@en, "Outras lavouras temporárias"@pt ; skos:altLabel "tobacco"@en, "fumo"@pt, "maize"@en .
+tx:lu-perennial-crop a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-agriculture ; skos:notation "36" ;
+  skos:prefLabel "Perennial crop"@en, "Lavoura perene"@pt .
+tx:lu-forest-plantation a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-farming ; skos:notation "9" ;
+  skos:prefLabel "Forest plantation"@en, "Silvicultura"@pt ; skos:altLabel "eucalyptus"@en, "pine"@en .
+tx:lu-mosaic-of-uses a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-farming ; skos:notation "21" ;
+  skos:prefLabel "Mosaic of uses"@en, "Mosaico de usos"@pt ; skos:definition "Farming where pasture and crops cannot be told apart, typical of family farms."@en .
+tx:lu-non-vegetated a skos:Concept ; skos:inScheme tx:land-use ; skos:topConceptOf tx:land-use ; skos:notation "22" ;
+  skos:prefLabel "Non-vegetated area"@en, "Área não vegetada"@pt .
+tx:lu-urban a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-non-vegetated ; skos:notation "24" ;
+  skos:prefLabel "Urban area"@en, "Área urbanizada"@pt ; skos:exactMatch agrovoc:c_8085 .
+tx:lu-mining a skos:Concept ; skos:inScheme tx:land-use ; skos:broader tx:lu-non-vegetated ; skos:notation "30" ;
+  skos:prefLabel "Mining"@en, "Mineração"@pt ; skos:altLabel "garimpo"@pt ; skos:exactMatch agrovoc:c_49983 .
+tx:lu-water a skos:Concept ; skos:inScheme tx:land-use ; skos:topConceptOf tx:land-use ; skos:notation "26" ;
+  skos:prefLabel "Water"@en, "Corpo d'água"@pt .
+tx:lu-not-observed a skos:Concept ; skos:inScheme tx:land-use ; skos:topConceptOf tx:land-use ; skos:notation "27" ;
+  skos:prefLabel "Not observed"@en, "Não observado"@pt .
