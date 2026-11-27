@@ -29,7 +29,6 @@ tests/
 docs/research/  design and market research
 docs-site/  living docs site (Astro Starlight), deployed to GitHub Pages
 features/   Gherkin feature files: the specs that tests and docs share
-archive/    retired earlier work (Genipabu vegetation-risk demo)
 ```
 
 ## Setup
