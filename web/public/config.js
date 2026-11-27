@@ -4,4 +4,6 @@ window.__TABUSH_CONFIG__ = {
   apiUrl: "",          // empty = use the in-browser mock API
   mapStyleUrl: "",     // empty = built-in OpenStreetMap raster style
   tilesUrl: "/tiles",  // public data layers (PMTiles); see data/tiles
+  openDataUrl: "/open", // open data files for talk-to-the-data; see data/open
+  llmUrl: "/llm",      // Claude API proxy that adds ANTHROPIC_API_KEY (vite dev/preview)
 };

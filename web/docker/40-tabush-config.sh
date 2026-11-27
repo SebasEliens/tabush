@@ -7,5 +7,7 @@ window.__TABUSH_CONFIG__ = {
   apiUrl: "${TABUSH_API_URL:-}",
   mapStyleUrl: "${TABUSH_MAP_STYLE_URL:-}",
   tilesUrl: "${TABUSH_TILES_URL:-/tiles}",
+  openDataUrl: "${TABUSH_OPEN_DATA_URL:-/open}",
+  llmUrl: "${TABUSH_LLM_URL:-}",
 };
 JS

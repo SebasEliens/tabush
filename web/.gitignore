@@ -1,2 +1,6 @@
 node_modules/
 dist/
+e2e/results/
+e2e/report/
+e2e/screenshots/
+.features-gen/
