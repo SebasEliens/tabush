@@ -1,3 +1,4 @@
+@docs
 Feature: Living docs site
   As a member of the Tabush team or a partner reviewing the project
   I want one static site with research, mocks, decisions and test evidence

@@ -12,7 +12,8 @@ const testDir = defineBddConfig({
   featuresRoot: "..",
   features: "../features/*.feature",
   steps: "e2e/steps/*.ts",
-  tags: llm ? "@llm" : "not @llm",
+  // @docs scenarios run against the docs site (docs-site/scripts/screenshots.mjs), not the app.
+  tags: llm ? "@llm" : "not @llm and not @docs",
 });
 
 export default defineConfig({
