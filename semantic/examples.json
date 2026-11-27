@@ -1,0 +1,47 @@
+{
+  "about": "Golden questions for the talk-to-the-data assistant. Each one has a reference SQL query on the published files in data/open/. They are worked examples in the app, few-shot examples in the assistant's prompt, and regression tests (tests/test_semantic.py runs every query). 'expect' lists checks that must hold on any snapshot.",
+  "examples": [
+    {
+      "id": "family-farms-double-claims",
+      "question": "How many family farms in Canguçu overlap another CAR claim?",
+      "concepts": ["tx:small-property", "tx:private-rural-property", "tx:flag-car-overlap"],
+      "sql": "SELECT count(*) FILTER (WHERE tenure_flag = 'car_overlap') AS overlapping,\n       count(*) AS family_farms,\n       round(100.0 * overlapping / family_farms, 1) AS pct\nFROM rural_properties\nWHERE municipality = 'Canguçu'\n  AND property_type = 'IRU' AND size_class = 'small' AND status <> 'CA'",
+      "expect": {"columns": ["overlapping", "family_farms", "pct"], "min_rows": 1}
+    },
+    {
+      "id": "properties-in-indigenous-lands",
+      "question": "Which rural properties overlap an indigenous land, and which land?",
+      "concepts": ["tx:flag-indigenous-land", "tabush:overlaps"],
+      "sql": "SELECT p.source_id AS car_code, p.municipality, il.name AS indigenous_land, il.phase,\n       e.overlap_ha, e.overlap_pct, e.confidence\nFROM edges e\nJOIN rural_properties p ON e.subject = 'rural_properties:' || p.source_id\nJOIN indigenous_lands il ON e.object = 'indigenous_lands:' || il.source_id\nWHERE e.predicate = 'overlaps'\nORDER BY e.overlap_ha DESC",
+      "expect": {"columns": ["car_code", "municipality", "indigenous_land", "phase", "overlap_ha", "overlap_pct", "confidence"]}
+    },
+    {
+      "id": "indigenous-population-and-lands",
+      "question": "Quantas pessoas indígenas vivem em São Félix do Xingu, e quais terras indígenas tocam o município?",
+      "concepts": ["tabush:indigenousPopulation", "tabush:intersects"],
+      "sql": "SELECT m.name AS municipality, m.population, m.indigenous_population,\n       m.indigenous_population_in_ti, il.name AS indigenous_land, il.phase,\n       e.overlap_ha AS hectares_in_municipality\nFROM municipalities m\nLEFT JOIN edges e ON e.object = 'municipalities:' || m.source_id AND e.predicate = 'intersects'\n                 AND e.subject LIKE 'indigenous_lands:%'\nLEFT JOIN indigenous_lands il ON e.subject = 'indigenous_lands:' || il.source_id\nWHERE m.name = 'São Félix do Xingu'\nORDER BY hectares_in_municipality DESC",
+      "expect": {"columns": ["municipality", "population", "indigenous_population", "indigenous_population_in_ti", "indigenous_land", "phase", "hectares_in_municipality"], "min_rows": 1}
+    },
+    {
+      "id": "public-protected-area-claims",
+      "question": "Which private properties claim land inside protected areas that must be public, by category?",
+      "concepts": ["tx:flag-public-protected-area", "tx:protected-area-category"],
+      "sql": "SELECT pa.name AS protected_area, c.label_en AS category, pa.sphere,\n       count(*) AS properties, round(sum(e.overlap_ha)) AS hectares_claimed\nFROM edges e\nJOIN protected_areas pa ON e.object = 'protected_areas:' || pa.source_id\nJOIN concepts c ON c.scheme = 'tx:protected-area-category' AND c.notation = pa.category\nWHERE e.predicate = 'overlaps' AND c.requires_public_land\nGROUP BY ALL\nORDER BY hectares_claimed DESC",
+      "expect": {"columns": ["protected_area", "category", "sphere", "properties", "hectares_claimed"]}
+    },
+    {
+      "id": "status-by-size",
+      "question": "Break down CAR records by status and legal size in each municipality.",
+      "concepts": ["tx:car-status", "tx:property-size"],
+      "sql": "SELECT p.municipality, s.label_en AS status, coalesce(z.label_en, 'No size class') AS size,\n       count(*) AS records, round(sum(p.area_ha)) AS hectares\nFROM rural_properties p\nJOIN concepts s ON s.scheme = 'tx:car-status' AND s.notation = p.status\nLEFT JOIN concepts z ON z.scheme = 'tx:property-size' AND z.notation = p.size_class\nGROUP BY ALL\nORDER BY p.municipality, records DESC",
+      "expect": {"columns": ["municipality", "status", "size", "records", "hectares"], "min_rows": 1}
+    },
+    {
+      "id": "overlap-chains-to-indigenous-land",
+      "question": "Which properties are linked by a chain of up to three overlapping CAR claims to a property that overlaps an indigenous land?",
+      "concepts": ["tabush:overlaps", "tx:flag-indigenous-land"],
+      "sql": "WITH RECURSIVE chain(start, node, hops) AS (\n  SELECT e.subject, e.subject, 0\n  FROM edges e\n  WHERE e.predicate = 'overlaps' AND e.object LIKE 'indigenous_lands:%'\n  UNION\n  SELECT c.start, e.subject, c.hops + 1\n  FROM chain c\n  JOIN edges e ON e.object = c.node AND e.predicate = 'overlaps'\n  WHERE e.subject LIKE 'rural_properties:%' AND c.hops < 3\n)\nSELECT hops, count(DISTINCT node) AS properties\nFROM chain\nGROUP BY hops\nORDER BY hops",
+      "expect": {"columns": ["hops", "properties"]}
+    }
+  ]
+}
