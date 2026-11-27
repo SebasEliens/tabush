@@ -1,0 +1,33 @@
+{
+  "name": "tabush-docs",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync-docs.mjs",
+    "dev": "npm run sync && astro dev",
+    "build": "npm run sync && astro build",
+    "preview": "astro preview",
+    "screenshots": "node scripts/screenshots.mjs",
+    "build:app": "cd ../web && npx vite build --base=${SITE_BASE:-/tabush}/app/ --outDir ../docs-site/dist/app --emptyOutDir",
+    "build:all": "npm run build && npm run build:app"
+  },
+  "dependencies": {
+    "@astrojs/react": "^7.1.9",
+    "@astrojs/starlight": "^0.43.2",
+    "@cucumber/gherkin": "^43.0.0",
+    "@cucumber/messages": "^35.0.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/outfit": "^5.3.0",
+    "astro": "^7.4.13",
+    "h3-js": "^4.5.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.3",
+    "@types/react-dom": "^19.3.0",
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2"
+  }
+}

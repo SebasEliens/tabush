@@ -1,0 +1,90 @@
+/*
+ * Tabush theme for Starlight. Tokens come straight from the app's design
+ * system (web/src/design/tokens.css), so the docs and the app never drift.
+ */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/outfit";
+@import "../../../web/src/design/tokens.css";
+
+:root {
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+  --sl-content-width: 50rem;
+}
+
+/* Dark mode (Starlight default): pasture greens on ink */
+:root {
+  --sl-color-accent-low: var(--green-900);
+  --sl-color-accent: var(--green-400);
+  --sl-color-accent-high: var(--green-100);
+  --sl-color-black: var(--green-950);
+}
+
+/* Light mode */
+:root[data-theme="light"] {
+  --sl-color-accent-low: var(--green-50);
+  --sl-color-accent: var(--green-600);
+  --sl-color-accent-high: var(--green-800);
+  --sl-color-white: var(--neutral-900);
+  --sl-color-black: var(--neutral-0);
+}
+
+/* Brand bar: the app's solid sky-cyan top bar with ink text */
+:root[data-theme="light"] .header {
+  background: var(--color-brand-bar);
+  border-bottom-color: var(--cyan-700);
+}
+:root[data-theme="light"] .header .site-title,
+:root[data-theme="light"] .header a,
+:root[data-theme="light"] .header button {
+  color: var(--color-text-on-brand);
+}
+
+.site-title,
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+h1#_top,
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.01em;
+}
+.site-title::before {
+  content: "";
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-inline-end: 0.4rem;
+  border-radius: 50%;
+  background: var(--color-spark); /* the logo dot: decoration only */
+}
+
+/* ---------- Shared bits for interactive components ---------- */
+.tb-widget {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--sl-color-bg-nav);
+}
+.tb-widget h4 { margin: 0 0 0.5rem; font-family: var(--font-display); }
+.tb-muted { color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); }
+.tb-bar {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--sl-color-accent);
+  transition: width 200ms ease;
+}
+@media (prefers-reduced-motion: reduce) { .tb-bar { transition: none; } }
+.tb-status {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: var(--sl-text-sm);
+  font-weight: 600;
+  border: 1px solid;
+}
+.tb-status[data-status="accepted"] { color: var(--color-success-text); background: var(--color-success-bg); border-color: var(--color-success-border); }
+.tb-status[data-status="proposed"] { color: var(--color-info-text); background: var(--color-info-bg); border-color: var(--color-info-border); }
+.tb-status[data-status="superseded"] { color: var(--color-warning-text); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
