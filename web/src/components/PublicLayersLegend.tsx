@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 import type { PublicLayerId, PublicLayerMeta, TenureFlag } from "../api/publicLayers";
 import { dateLong, tenureFlagText } from "../format";
-import { Button, Skeleton, Switch } from "../ui";
+import { Button, MapPanel, Skeleton, Switch } from "../ui";
 
 type Bbox = [number, number, number, number];
 
@@ -11,6 +11,8 @@ interface Props {
   visible: Record<PublicLayerId, boolean>;
   onToggle: (id: PublicLayerId, on: boolean) => void;
   onFocus: (bbox: Bbox) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const LABEL: Record<PublicLayerId, string> = {
@@ -32,11 +34,10 @@ const FLAG_ROWS: { flags: TenureFlag[]; label: string; swatch: React.CSSProperti
 const count = (n: number) => n.toLocaleString("en-GB");
 
 /** Map legend card for the public land-tenure layers: one switch per layer with its source and date. */
-export function PublicLayersLegend({ meta, visible, onToggle, onFocus }: Props) {
+export function PublicLayersLegend({ meta, visible, onToggle, onFocus, open, onOpenChange }: Props) {
   const ids: PublicLayerId[] = ["rural_properties", "indigenous_lands", "protected_areas"];
   return (
-    <div className="map-card legend" aria-label="Land tenure, public data">
-      <strong>Land tenure · public data</strong>
+    <MapPanel className="legend" label="Land tenure, public data" title="Land tenure · public data" open={open} onOpenChange={onOpenChange}>
       {ids.map((id) => {
         const m = meta[id];
         if (m === undefined) return <Skeleton key={id} width="80%" height={10} />;
@@ -64,7 +65,7 @@ export function PublicLayersLegend({ meta, visible, onToggle, onFocus }: Props) 
           </div>
         );
       })}
-    </div>
+    </MapPanel>
   );
 }
 

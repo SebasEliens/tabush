@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Leaf, ShieldCheck, Thermometer } from "lucide-react";
+import { Eye, EyeOff, Leaf, ShieldCheck, Thermometer } from "lucide-react";
 import { api } from "../api/client";
-import { fetchLayerMeta, PUBLIC_LAYER_STACK, type PublicLayerId, type PublicLayerMeta } from "../api/publicLayers";
+import { tenureDataMode, usePublicLayerMeta, type PublicLayerId, type PublicLayerMeta } from "../api/publicLayers";
 import type { PortfolioSummary, RuralProperty, Territory } from "../api/types";
 import { MapView, type ColorBy } from "../components/MapView";
 import { PublicLayersLegend } from "../components/PublicLayersLegend";
@@ -10,15 +10,19 @@ import { PanelWelcome, PropertyPanel } from "../components/PropertyPanel";
 import { riskRamp } from "../design/tokens";
 import { statusText, statusTone, worstSeverity } from "../format";
 import { useTenant } from "../tenant";
-import { EmptyState, SearchInput, SegmentedControl, Skeleton, StatusBadge, riskLevel } from "../ui";
+import { Button, EmptyState, Kbd, MapPanel, SearchInput, SegmentedControl, Skeleton, StatusBadge, riskLevel, useStoredState } from "../ui";
 
 export function PropertiesPage() {
   const { tenant } = useTenant();
   const [props, setProps] = useState<RuralProperty[]>();
   const [summary, setSummary] = useState<PortfolioSummary>();
   const [territories, setTerritories] = useState<Territory[]>([]);
-  // undefined while loading, null when a layer's tiles haven't been built
-  const [layerMeta, setLayerMeta] = useState<Partial<Record<PublicLayerId, PublicLayerMeta | null>>>({});
+  const layerMeta = usePublicLayerMeta();
+  // The fake portfolio is a stand-in: once real land tenure data is loaded it goes away.
+  const mode = tenureDataMode(layerMeta);
+  const showMock = mode === "mock";
+  const [panelsHidden, setPanelsHidden] = useStoredState("tabush.map.panelsHidden", false);
+  const [panelOpen, setPanelOpen] = useStoredState<Record<"colours" | "tenure", boolean>>("tabush.map.panelOpen", { colours: true, tenure: true });
   const [visibleLayers, setVisibleLayers] = useState<Record<PublicLayerId, boolean>>({ protected_areas: true, indigenous_lands: true, rural_properties: true });
   const [focus, setFocus] = useState<{ bbox: [number, number, number, number] }>();
   const [query, setQuery] = useState("");
@@ -28,17 +32,24 @@ export function PropertiesPage() {
   const setSelected = (car?: string) => setParams(car ? { car } : {});
 
   useEffect(() => {
-    api.listTerritories().then(setTerritories);
-    for (const id of PUBLIC_LAYER_STACK) {
-      fetchLayerMeta(id).then((m) => setLayerMeta((prev) => ({ ...prev, [id]: m ?? null })));
-    }
-  }, []);
+    if (showMock) api.listTerritories().then(setTerritories);
+  }, [showMock]);
   useEffect(() => {
-    if (!tenant) return;
+    if (!tenant || !showMock) return;
     setProps(undefined);
     api.listProperties(tenant.id).then(setProps);
     api.portfolioSummary(tenant.id).then(setSummary);
-  }, [tenant]);
+  }, [tenant, showMock]);
+  // "H" hides or shows every panel on the map, wherever focus is (except while typing).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (e.key.toLowerCase() !== "h" || e.metaKey || e.ctrlKey || e.altKey || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
+      setPanelsHidden((h) => !h);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setPanelsHidden]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -53,8 +64,8 @@ export function PropertiesPage() {
   );
 
   return (
-    <div className="workspace">
-      <aside className="sidebar" aria-label="Properties">
+    <div className={showMock ? "workspace" : "workspace workspace--map-only"}>
+      {showMock && <aside className="sidebar" aria-label="Properties">
         <div className="sidebar__head stack-2">
           <SearchInput label="Search properties" placeholder="Search name or CAR code" value={query} onChange={setQuery} />
           <div className="text-xs text-muted">
@@ -88,12 +99,12 @@ export function PropertiesPage() {
             );
           })}
         </ul>
-      </aside>
+      </aside>}
 
       <div className="map-area">
         <MapView
-          properties={props ?? []}
-          territories={territories}
+          properties={showMock ? (props ?? []) : []}
+          territories={showMock ? territories : []}
           selected={selected}
           colorBy={colorBy}
           publicLayers={loadedLayers}
@@ -102,42 +113,62 @@ export function PropertiesPage() {
           onSelect={setSelected}
         />
         <div className="map-overlay">
-          <SegmentedControl
-            label="Colour properties by"
-            value={colorBy}
-            onChange={setColorBy}
-            options={[
-              { value: "risk", label: "Climate risk", icon: Thermometer },
-              { value: "compliance", label: "Compliance", icon: ShieldCheck },
-            ]}
-          />
-          <div className="map-card legend">
-            {colorBy === "risk" ? (
-              <>
-                <strong>Overall climate risk</strong>
-                <div className="legend__ramp">{riskRamp.map((c) => <span key={c} style={{ background: c }} />)}</div>
-                <div className="row-between"><span>Low</span><span>High</span></div>
-              </>
-            ) : (
-              <>
-                <strong>Compliance verdict</strong>
-                <div><span className="legend__swatch" style={{ background: "var(--color-success)" }} />Clear</div>
-                <div><span className="legend__swatch" style={{ background: "var(--color-warning)" }} />Needs review</div>
-                <div><span className="legend__swatch" style={{ background: "var(--color-danger)" }} />Blocked</div>
-              </>
-            )}
-            <div><span className="legend__swatch legend__swatch--territory" />Protected or traditional territory</div>
-          </div>
-          <PublicLayersLegend
-            meta={layerMeta}
-            visible={visibleLayers}
-            onToggle={(id, on) => setVisibleLayers((v) => ({ ...v, [id]: on }))}
-            onFocus={(bbox) => setFocus({ bbox })}
-          />
+          <Button
+            size="sm"
+            className="map-overlay__toggle"
+            icon={panelsHidden ? Eye : EyeOff}
+            aria-pressed={panelsHidden}
+            onClick={() => setPanelsHidden(!panelsHidden)}
+            title="Hide or show map panels (H)"
+          >
+            {panelsHidden ? "Show panels" : "Hide panels"}
+            <Kbd>H</Kbd>
+          </Button>
+          {!panelsHidden && showMock && (
+            <MapPanel
+              className="legend"
+              title={colorBy === "risk" ? "Overall climate risk" : "Compliance verdict"}
+              open={panelOpen.colours}
+              onOpenChange={(open) => setPanelOpen((p) => ({ ...p, colours: open }))}
+            >
+              <SegmentedControl
+                label="Colour properties by"
+                value={colorBy}
+                onChange={setColorBy}
+                options={[
+                  { value: "risk", label: "Climate risk", icon: Thermometer },
+                  { value: "compliance", label: "Compliance", icon: ShieldCheck },
+                ]}
+              />
+              {colorBy === "risk" ? (
+                <>
+                  <div className="legend__ramp">{riskRamp.map((c) => <span key={c} style={{ background: c }} />)}</div>
+                  <div className="row-between"><span>Low</span><span>High</span></div>
+                </>
+              ) : (
+                <>
+                  <div><span className="legend__swatch" style={{ background: "var(--color-success)" }} />Clear</div>
+                  <div><span className="legend__swatch" style={{ background: "var(--color-warning)" }} />Needs review</div>
+                  <div><span className="legend__swatch" style={{ background: "var(--color-danger)" }} />Blocked</div>
+                </>
+              )}
+              <div><span className="legend__swatch legend__swatch--territory" />Protected or traditional territory</div>
+            </MapPanel>
+          )}
+          {!panelsHidden && (
+            <PublicLayersLegend
+              meta={layerMeta}
+              visible={visibleLayers}
+              onToggle={(id, on) => setVisibleLayers((v) => ({ ...v, [id]: on }))}
+              onFocus={(bbox) => setFocus({ bbox })}
+              open={panelOpen.tenure}
+              onOpenChange={(open) => setPanelOpen((p) => ({ ...p, tenure: open }))}
+            />
+          )}
         </div>
       </div>
 
-      {current ? <PropertyPanel p={current} onClose={() => setSelected(undefined)} /> : <PanelWelcome summary={summary} tenantName={tenant?.name} />}
+      {showMock && (current ? <PropertyPanel p={current} onClose={() => setSelected(undefined)} /> : <PanelWelcome summary={summary} tenantName={tenant?.name} />)}
     </div>
   );
 }

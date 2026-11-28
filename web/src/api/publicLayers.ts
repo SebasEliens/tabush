@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { config } from "../config";
 
 // Public reference layers (shared by every tenant) are served as static
@@ -37,4 +38,36 @@ export async function fetchLayerMeta(layer: PublicLayerId): Promise<PublicLayerM
   } catch {
     return undefined;
   }
+}
+
+// One fetch per layer per page load, shared by every component that asks.
+const metaRequests: Partial<Record<PublicLayerId, Promise<PublicLayerMeta | undefined>>> = {};
+const metaRequest = (id: PublicLayerId) => (metaRequests[id] ??= fetchLayerMeta(id));
+
+/** undefined while loading, null when a layer's tiles haven't been built. */
+export type PublicLayerMetaState = Partial<Record<PublicLayerId, PublicLayerMeta | null>>;
+
+/** Provenance of every public layer, filled in as each one answers. */
+export function usePublicLayerMeta(): PublicLayerMetaState {
+  const [meta, setMeta] = useState<PublicLayerMetaState>({});
+  useEffect(() => {
+    let live = true;
+    for (const id of PUBLIC_LAYER_STACK) {
+      metaRequest(id).then((m) => live && setMeta((prev) => ({ ...prev, [id]: m ?? null })));
+    }
+    return () => {
+      live = false;
+    };
+  }, []);
+  return meta;
+}
+
+/**
+ * "real" once any public land-tenure layer has tiles, "mock" when none has
+ * (the fake parcels are then the only thing to show), "loading" until we know.
+ */
+export function tenureDataMode(meta: PublicLayerMetaState): "loading" | "real" | "mock" {
+  const values = PUBLIC_LAYER_STACK.map((id) => meta[id]);
+  if (values.some((m) => m)) return "real";
+  return values.every((m) => m === null) ? "mock" : "loading";
 }

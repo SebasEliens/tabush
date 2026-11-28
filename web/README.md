@@ -17,9 +17,14 @@ cd web && npm install && npm run dev
 
 ## Public data layers
 
-Real public land-tenure layers are drawn under the mock data, each with a
-switch, source and snapshot date in the "Land tenure" legend card. Build their
-tiles from the repo root, in this order (the CAR step measures overlaps against
+Real public land-tenure layers are drawn on the map, each with a
+switch, source and snapshot date in the "Land tenure" legend card. As soon as
+any of them is built, the map page drops the fake portfolio (parcel grid,
+property list and side panel) and shows only real data; the mock stays as a
+fallback when no layer exists. Every panel on the map folds to its title, and
+"Hide panels" (or the H key) clears them all.
+
+Build the tiles from the repo root, in this order (the CAR step measures overlaps against
 the first two):
 
 ```sh

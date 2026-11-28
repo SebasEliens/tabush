@@ -6,6 +6,7 @@ import { DesignPage } from "./pages/DesignPage";
 import { PortfolioPage } from "./pages/PortfolioPage";
 import { PropertiesPage } from "./pages/PropertiesPage";
 import { ReportPage } from "./pages/ReportPage";
+import { tenureDataMode, usePublicLayerMeta } from "./api/publicLayers";
 import { useTenant } from "./tenant";
 import { Badge, ButtonLink, Select } from "./ui";
 import { Logo } from "./ui/Logo";
@@ -17,7 +18,9 @@ export function App() {
   const { tenants, tenant, setTenantId } = useTenant();
   const { pathname } = useLocation();
   const isReport = pathname.startsWith("/report");
-  const isOpenData = pathname.startsWith("/ask"); // real open data, no mock records
+  // The map drops its fake portfolio once real land tenure data is loaded; /ask only ever uses open data.
+  const realMap = tenureDataMode(usePublicLayerMeta()) !== "mock" && pathname === "/";
+  const isOpenData = pathname.startsWith("/ask") || realMap;
   return (
     <div className="app">
       <a className="skip-link" href="#main">Skip to content</a>

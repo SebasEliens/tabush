@@ -2,7 +2,7 @@
 // they actually render, so reviews happen against the real thing.
 import { useState } from "react";
 import { Download, Leaf, Plus, ShieldCheck, Thermometer, Trash2 } from "lucide-react";
-import { Badge, Button, Callout, Card, Disclosure, EmptyState, Kbd, Meter, SearchInput, SegmentedControl, Stat, StatusBadge, Switch } from "../ui";
+import { Badge, Button, Callout, Card, Disclosure, EmptyState, Kbd, MapPanel, Meter, SearchInput, SegmentedControl, Stat, StatusBadge, Switch } from "../ui";
 import { Landscape } from "../ui/Landscape";
 import { Logo } from "../ui/Logo";
 
@@ -133,6 +133,21 @@ export function DesignPage() {
           <EmptyState icon={Leaf} title="No matching properties">Say what happened and what to try next.</EmptyState>
         </Card>
       </div>
+
+      <div className="two-col">
+        <Card title="Map panel">
+          <MapPanelDemo />
+        </Card>
+      </div>
     </div>
+  );
+}
+
+function MapPanelDemo() {
+  const [open, setOpen] = useState(true);
+  return (
+    <MapPanel className="legend" title="Land tenure · public data" open={open} onOpenChange={setOpen}>
+      Folds down to its title. The map's "Hide panels" button (or H) hides every panel at once.
+    </MapPanel>
   );
 }

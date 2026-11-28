@@ -52,6 +52,9 @@ main { flex: 1; min-height: 0; overflow: auto; }
 .map { position: absolute; inset: 0; }
 .map-overlay { position: absolute; top: var(--space-3); left: var(--space-3); z-index: var(--z-map-controls); display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); max-width: 300px; }
 .map-overlay .map-card { align-self: stretch; }
+.map-overlay__toggle { box-shadow: var(--shadow-md); }
+.map-overlay__toggle .ui-kbd { margin-left: var(--space-1); }
+.workspace--map-only { grid-template-columns: 1fr; }
 .map-card { background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-md); padding: var(--space-3); }
 .legend { display: flex; flex-direction: column; gap: 6px; font-size: var(--text-xs); color: var(--color-text-secondary); min-width: 210px; }
 .legend__ramp { display: flex; height: 10px; border-radius: var(--radius-full); overflow: hidden; }
@@ -153,7 +156,7 @@ main { flex: 1; min-height: 0; overflow: auto; }
 
 /* Hero illustration is mirrored so the tree frames the right edge and the title sits on open pasture. */
 .hero svg { transform: scaleX(-1); }
-.map-overlay .ui-segmented { background: var(--color-surface); box-shadow: var(--shadow-md); }
+.map-overlay .ui-segmented { align-self: flex-start; }
 
 /* Ask the data */
 .ask__layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--space-6); align-items: start; }
