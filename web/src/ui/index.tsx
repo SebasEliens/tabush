@@ -1,6 +1,6 @@
 // Tabush core UI components. Use these before writing new markup; see
 // docs/design-system.md for when to use which.
-import { useEffect, useRef, type ComponentProps, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from "react";
 import { Link, type LinkProps } from "react-router-dom";
 import { AlertTriangle, CheckCircle2, ChevronDown, Info, OctagonX, Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -163,6 +163,41 @@ export function Disclosure({ title, meta, defaultOpen, children }: { title: Reac
       </summary>
       <div className="ui-disclosure__body">{children}</div>
     </details>
+  );
+}
+
+/* Stored state: a UI preference that survives a reload ----------------------- */
+export function useStoredState<T>(key: string, initial: T): [T, (v: T | ((prev: T) => T)) => void] {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw === null ? initial : (JSON.parse(raw) as T);
+    } catch {
+      return initial;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      /* private mode or full storage: keep it for this visit only */
+    }
+  }, [key, value]);
+  return [value, setValue];
+}
+
+/* Map panel: a floating card over the map that folds down to its title -------- */
+// The title row is the toggle, so a folded panel still says what it holds.
+export function MapPanel({ title, open, onOpenChange, children, className, label }: { title: ReactNode; open: boolean; onOpenChange: (open: boolean) => void; children: ReactNode; className?: string; label?: string }) {
+  const bodyId = useId();
+  return (
+    <section className={cx("map-card ui-map-panel", !open && "ui-map-panel--closed")} aria-label={label}>
+      <button type="button" className="ui-map-panel__head" aria-expanded={open} aria-controls={bodyId} onClick={() => onOpenChange(!open)}>
+        <span className="ui-map-panel__title">{title}</span>
+        <ChevronDown size={16} className="ui-map-panel__chevron" aria-hidden />
+      </button>
+      <div id={bodyId} className={cx("ui-map-panel__body", className)} hidden={!open}>{children}</div>
+    </section>
   );
 }
 
