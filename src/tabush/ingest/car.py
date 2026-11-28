@@ -36,12 +36,14 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import ssl
 from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
 import requests
 import shapely
+from requests.adapters import HTTPAdapter
 
 from tabush.geo import STORAGE_CRS, area_ha, assert_crs, assert_valid
 from tabush.ingest import common
@@ -95,6 +97,20 @@ def uf_of(municipio: str) -> str:
     return UF_BY_CODE[str(municipio)[:2]]
 
 
+class _SicarAdapter(HTTPAdapter):
+    """SICAR offers only AES256-GCM-SHA384 (no forward secrecy), which OpenSSL 3 drops."""
+
+    def init_poolmanager(self, *args, **kwargs):
+        ctx = ssl.create_default_context()  # still verifies the certificate
+        ctx.set_ciphers("DEFAULT:AES256-GCM-SHA384")
+        kwargs["ssl_context"] = ctx
+        return super().init_poolmanager(*args, **kwargs)
+
+
+SICAR = requests.Session()
+SICAR.mount("https://geoserver.car.gov.br", _SicarAdapter())
+
+
 def municipality_bbox(municipio: str, timeout: int = 60) -> tuple[float, float, float, float]:
     """(minx, miny, maxx, maxy) of a municipality in lon/lat, from IBGE's mesh API."""
     r = requests.get(
@@ -132,7 +148,7 @@ def download_bbox(
     dest.mkdir(parents=True, exist_ok=True)
     pages, start = [], 0
     while True:
-        r = requests.get(WFS_URL, params=wfs_params(uf, bbox, start), timeout=timeout)
+        r = SICAR.get(WFS_URL, params=wfs_params(uf, bbox, start), timeout=timeout)
         r.raise_for_status()
         page = dest / f"page-{start // PAGE_SIZE:04d}.geojson"
         page.write_bytes(r.content)
