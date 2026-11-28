@@ -77,6 +77,9 @@ farm with an araucária pine.
   overlap with another CAR claim, grey (`--color-not-assessed`) for settlements,
   traditional territories and cancelled records. Layer order, bottom to top:
   protected areas, indigenous lands, CAR records, then the tenant's parcels.
+  Once any real land tenure layer is loaded, the map shows only real data: the
+  fake portfolio (parcel grid, property list, colour legend, "Mock data" badge)
+  is a fallback for when no layer has been built yet.
 
 ## 4. Tokens
 
@@ -104,6 +107,7 @@ paint) are mirrored in `tokens.ts`; keep both in sync.
 | `Meter`, `riskLevel` | 0–1 scores with a word (Very low … Very high). |
 | `SegmentedControl` | Switching a view mode (2–4 options). |
 | `Switch` | Turning one thing on or off, such as a map layer. The hint carries source and snapshot date. |
+| `MapPanel` | A floating card over the map (legends, layer switches). Its title row folds it away; the map's "Hide panels" button or the H key hides every panel at once. Both choices are remembered. |
 | `Disclosure` | Details on demand. |
 | `SearchInput`, `Select`, `Kbd` | Inputs; `/` shortcut built in. |
 | `EmptyState`, `Skeleton` | Nothing to show (say why and what next); loading. |
